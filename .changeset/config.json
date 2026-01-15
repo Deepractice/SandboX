@@ -3,16 +3,11 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [
-    [
-      "@sandboxjs/sandbox",
-      "@@sandboxjs/sandbox/core",
-      "@@sandboxjs/sandbox/cli",
-      "@@sandboxjs/sandbox/cloudflare-isolator"
-    ]
+    ["@sandboxjs/sandbox", "@sandboxjs/core", "@sandboxjs/cli", "@sandboxjs/cloudflare-isolator"]
   ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@@sandboxjs/sandbox/bdd"]
+  "ignore": ["@sandboxjs/bdd"]
 }
