@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>SandboX</h1>
+  <h1>SandboxX</h1>
   <p>
     <strong>Multi-language secure execution sandbox for AI Agents</strong>
   </p>
@@ -15,15 +15,15 @@
   <p>
     <a href="https://github.com/Deepractice/SandboX"><img src="https://img.shields.io/github/stars/Deepractice/SandboX?style=social" alt="Stars"/></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Deepractice/SandboX?color=blue" alt="License"/></a>
-    <a href="https://www.npmjs.com/package/@sandboxjs/sandbox"><img src="https://img.shields.io/npm/v/@sandboxjs/sandbox?color=cb3837&logo=npm" alt="npm"/></a>
+    <a href="https://www.npmjs.com/package/sandboxxjs"><img src="https://img.shields.io/npm/v/sandboxxjs?color=cb3837&logo=npm" alt="npm"/></a>
   </p>
 </div>
 
 ---
 
-## What is SandboX?
+## What is SandboxX?
 
-**SandboX** provides secure, isolated execution environments for running untrusted code from AI Agents.
+**SandboxX** provides secure, isolated execution environments for running untrusted code from AI Agents.
 
 - **Multi-Language**: Node.js, Python, Bash, Docker
 - **Multi-Isolator**: Local (child_process), E2B (microVM), Firecracker, Docker
@@ -124,11 +124,11 @@ const prodSandbox = createSandbox({ runtime: "node", isolator: "e2b" });
 
 ## Packages
 
-| Package                                      | Description         |
-| -------------------------------------------- | ------------------- |
-| [`@sandboxjs/sandbox`](./packages/sandboxjs) | Main API            |
-| [`@sandboxjs/core`](./packages/core)         | Core implementation |
-| [`@sandboxjs/cli`](./packages/cli)           | CLI tool            |
+| Package                              | Description         |
+| ------------------------------------ | ------------------- |
+| [`sandboxxjs`](./packages/sandboxjs) | Main API            |
+| [`@sandboxjs/core`](./packages/core) | Core implementation |
+| [`@sandboxjs/cli`](./packages/cli)   | CLI tool            |
 
 ## CLI
 
