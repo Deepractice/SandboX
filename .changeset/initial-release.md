@@ -1,5 +1,5 @@
 ---
-"@sandboxxjs/sandbox": minor
+"sandboxxjs": minor
 "@sandboxxjs/core": minor
 "@sandboxxjs/cli": minor
 "@sandboxxjs/cloudflare-isolator": minor
