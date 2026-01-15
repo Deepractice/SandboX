@@ -11,7 +11,7 @@ export {
   Sandbox,
   type SandboxConfig,
   type Runtime,
-  type Backend,
+  type IsolatorType,
   type ExecuteOptions,
   type ExecuteResult,
   type FileSystem,

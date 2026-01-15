@@ -58,7 +58,7 @@ async function runCommand(args: string[]) {
 
     const sandbox = createSandbox({
       runtime: runtime as "bash" | "node" | "python" | "docker",
-      backend: "local",
+      isolator: "local",
     });
 
     console.log(`Running ${filePath} with ${runtime} runtime...`);

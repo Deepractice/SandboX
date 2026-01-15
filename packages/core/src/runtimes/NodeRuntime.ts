@@ -4,16 +4,16 @@
 
 import { Runtime } from "./Runtime.js";
 import type { ExecuteOptions, ExecuteResult } from "../types.js";
-import { Backend } from "../backends/Backend.js";
+import { Isolator } from "../isolators/Isolator.js";
 
 export class NodeRuntime extends Runtime {
-  constructor(private backend: Backend) {
+  constructor(private isolator: Isolator) {
     super();
   }
 
   async execute(options: ExecuteOptions): Promise<ExecuteResult> {
-    // For Node runtime, we delegate to the backend
-    return this.backend.execute(options);
+    // For Node runtime, we delegate to the isolator
+    return this.isolator.execute(options);
   }
 
   async prepare(): Promise<void> {

@@ -20,12 +20,9 @@ export class Sandbox {
   private isolator: Isolator;
   private runtime: Runtime;
   private eventHandlers: Map<string, EventHandler[]> = new Map();
-  private config: SandboxConfig;
   public fs: FileSystem;
 
   constructor(config: SandboxConfig) {
-    this.config = config;
-
     // Initialize isolator
     this.isolator = this.createIsolator(config.isolator, config.runtime);
     this.fs = this.isolator.getFileSystem();
@@ -52,7 +49,7 @@ export class Sandbox {
     }
   }
 
-  private createRuntime(runtimeType: SandboxConfig["runtime"], isolator: Isolator): Runtime {
+  private createRuntime(_runtimeType: SandboxConfig["runtime"], isolator: Isolator): Runtime {
     // Use GenericRuntime for all runtimes - isolator handles the specifics
     return new GenericRuntime(isolator);
   }
