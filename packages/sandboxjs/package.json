@@ -1,6 +1,6 @@
 {
   "name": "sandboxxjs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "SandboX - Secure code execution sandbox for AI agents",
   "keywords": [
     "sandbox",
