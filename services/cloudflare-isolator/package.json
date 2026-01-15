@@ -1,0 +1,44 @@
+{
+  "name": "@sandboxjs/cloudflare-isolator",
+  "version": "0.0.1",
+  "description": "Cloudflare Container Isolator - Docker-based code execution server",
+  "keywords": [
+    "sandbox",
+    "cloudflare",
+    "docker",
+    "isolation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deepractice/SandboX.git",
+    "directory": "services/cloudflare-isolator"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "bin": {
+    "cloudflare-isolator": "./dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "build": "bun run build.ts",
+    "prepublishOnly": "bun run build",
+    "deploy": "wrangler deploy",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/containers": "^0.0.31",
+    "wrangler": "^4.59.1",
+    "@cloudflare/workers-types": "^4.20250110.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

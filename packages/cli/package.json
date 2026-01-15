@@ -1,0 +1,40 @@
+{
+  "name": "@sandboxjs/cli",
+  "version": "0.0.1",
+  "description": "CLI for SandboX - Secure code execution sandbox",
+  "keywords": [
+    "sandbox",
+    "cli",
+    "execution",
+    "security"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deepractice/SandboX.git",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "sandbox": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "sandboxjs": "workspace:*"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

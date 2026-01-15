@@ -1,0 +1,46 @@
+{
+  "name": "sandboxjs",
+  "version": "0.0.1",
+  "description": "SandboX - Secure code execution sandbox for AI agents",
+  "keywords": [
+    "sandbox",
+    "execution",
+    "security",
+    "isolation",
+    "ai"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deepractice/SandboX.git"
+  },
+  "homepage": "https://github.com/Deepractice/SandboX",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run build.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sandboxjs/core": "workspace:*"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

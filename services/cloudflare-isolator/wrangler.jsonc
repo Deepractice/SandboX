@@ -1,0 +1,26 @@
+{
+  "name": "sandbox-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-27",
+  "containers": [
+    {
+      "class_name": "SandboxContainer",
+      "image": "./Dockerfile",
+      "max_instances": 10,
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "SandboxContainer",
+        "name": "SANDBOX_CONTAINER",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SandboxContainer"],
+    },
+  ],
+}
