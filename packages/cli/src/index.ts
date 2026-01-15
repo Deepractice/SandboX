@@ -3,7 +3,7 @@
  * CLI for SandboX
  */
 
-import { createSandbox } from "sandboxjs";
+import { createSandbox } from "@sandboxjs/sandbox";
 import * as fs from "fs/promises";
 
 const args = process.argv.slice(2);

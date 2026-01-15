@@ -1,5 +1,5 @@
 {
-  "name": "sandboxjs",
+  "name": "@sandboxjs/sandbox",
   "version": "0.0.1",
   "description": "SandboX - Secure code execution sandbox for AI agents",
   "keywords": [

@@ -28,8 +28,8 @@
       "version": "0.1.0",
       "devDependencies": {
         "@cucumber/cucumber": "^11.2.0",
+        "@sandboxjs/sandbox": "workspace:*",
         "@types/node": "^24.9.2",
-        "sandboxjs": "workspace:*",
         "tsx": "^4.20.6",
         "typescript": "^5.9.3",
       },
@@ -41,7 +41,7 @@
         "sandbox": "./dist/index.js",
       },
       "dependencies": {
-        "sandboxjs": "workspace:*",
+        "@sandboxjs/sandbox": "workspace:*",
       },
     },
     "packages/core": {
@@ -53,7 +53,7 @@
       },
     },
     "packages/sandboxjs": {
-      "name": "sandboxjs",
+      "name": "@sandboxjs/sandbox",
       "version": "0.0.1",
       "dependencies": {
         "@sandboxjs/core": "workspace:*",
@@ -418,6 +418,8 @@
     "@sandboxjs/cloudflare-isolator": ["@sandboxjs/cloudflare-isolator@workspace:services/cloudflare-isolator"],
 
     "@sandboxjs/core": ["@sandboxjs/core@workspace:packages/core"],
+
+    "@sandboxjs/sandbox": ["@sandboxjs/sandbox@workspace:packages/sandboxjs"],
 
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
 
@@ -934,8 +936,6 @@
     "run-parallel": ["run-parallel@1.2.0", "", { "dependencies": { "queue-microtask": "^1.2.2" } }, "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA=="],
 
     "safer-buffer": ["safer-buffer@2.1.2", "", {}, "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="],
-
-    "sandboxjs": ["sandboxjs@workspace:packages/sandboxjs"],
 
     "seed-random": ["seed-random@2.2.0", "", {}, "sha512-34EQV6AAHQGhoc0tn/96a9Fsi6v2xdqe/dMUwljGRaFOzR3EgRmECvD0O8vi8X+/uQ50LGHfkNu/Eue5TPKZkQ=="],
 

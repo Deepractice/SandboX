@@ -28,7 +28,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "sandboxjs": "workspace:*"
+    "@sandboxjs/sandbox": "workspace:*"
   },
   "devDependencies": {},
   "publishConfig": {

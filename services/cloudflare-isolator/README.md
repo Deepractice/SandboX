@@ -25,7 +25,7 @@ PORT=9000 cloudflare-isolator
 ### Programmatic
 
 ```typescript
-import { createSandbox } from "sandboxjs";
+import { createSandbox } from "@sandboxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",

@@ -9,7 +9,7 @@
     "test:tags": "NODE_OPTIONS='--import tsx' cucumber-js --tags"
   },
   "devDependencies": {
-    "sandboxjs": "workspace:*",
+    "@sandboxjs/sandbox": "workspace:*",
     "@cucumber/cucumber": "^11.2.0",
     "@types/node": "^24.9.2",
     "tsx": "^4.20.6",

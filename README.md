@@ -15,7 +15,7 @@
   <p>
     <a href="https://github.com/Deepractice/SandboX"><img src="https://img.shields.io/github/stars/Deepractice/SandboX?style=social" alt="Stars"/></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Deepractice/SandboX?color=blue" alt="License"/></a>
-    <a href="https://www.npmjs.com/package/sandboxjs"><img src="https://img.shields.io/npm/v/sandboxjs?color=cb3837&logo=npm" alt="npm"/></a>
+    <a href="https://www.npmjs.com/package/@sandboxjs/sandbox"><img src="https://img.shields.io/npm/v/@sandboxjs/sandbox?color=cb3837&logo=npm" alt="npm"/></a>
   </p>
 </div>
 
@@ -32,13 +32,13 @@
 ## Installation
 
 ```bash
-npm install sandboxjs
+npm install @sandboxjs/sandbox
 ```
 
 ## Quick Start
 
 ```typescript
-import { createSandbox } from "sandboxjs";
+import { createSandbox } from "@sandboxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",
@@ -124,11 +124,11 @@ const prodSandbox = createSandbox({ runtime: "node", isolator: "e2b" });
 
 ## Packages
 
-| Package                              | Description         |
-| ------------------------------------ | ------------------- |
-| [`sandboxjs`](./packages/sandboxjs)  | Main API            |
-| [`@sandboxjs/core`](./packages/core) | Core implementation |
-| [`@sandboxjs/cli`](./packages/cli)   | CLI tool            |
+| Package                                      | Description         |
+| -------------------------------------------- | ------------------- |
+| [`@sandboxjs/sandbox`](./packages/sandboxjs) | Main API            |
+| [`@sandboxjs/core`](./packages/core)         | Core implementation |
+| [`@sandboxjs/cli`](./packages/cli)           | CLI tool            |
 
 ## CLI
 
