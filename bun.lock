@@ -24,7 +24,7 @@
       },
     },
     "bdd": {
-      "name": "@sandboxjs/bdd",
+      "name": "@sandboxxjs/bdd",
       "version": "0.1.0",
       "devDependencies": {
         "@cucumber/cucumber": "^11.2.0",
@@ -35,7 +35,7 @@
       },
     },
     "packages/cli": {
-      "name": "@sandboxjs/cli",
+      "name": "@sandboxxjs/cli",
       "version": "0.0.1",
       "bin": {
         "sandbox": "./dist/index.js",
@@ -45,10 +45,10 @@
       },
     },
     "packages/core": {
-      "name": "@sandboxjs/core",
+      "name": "@sandboxxjs/core",
       "version": "0.0.1",
       "dependencies": {
-        "@sandboxjs/cloudflare-isolator": "workspace:*",
+        "@sandboxxjs/cloudflare-isolator": "workspace:*",
         "execa": "^9.6.1",
       },
     },
@@ -56,11 +56,11 @@
       "name": "sandboxxjs",
       "version": "0.0.1",
       "dependencies": {
-        "@sandboxjs/core": "workspace:*",
+        "@sandboxxjs/core": "workspace:*",
       },
     },
     "services/cloudflare-isolator": {
-      "name": "@sandboxjs/cloudflare-isolator",
+      "name": "@sandboxxjs/cloudflare-isolator",
       "version": "0.0.1",
       "bin": {
         "cloudflare-isolator": "./dist/cli.js",
@@ -411,13 +411,13 @@
 
     "@poppinss/exception": ["@poppinss/exception@1.2.3", "", {}, "sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw=="],
 
-    "@sandboxjs/bdd": ["@sandboxjs/bdd@workspace:bdd"],
+    "@sandboxxjs/bdd": ["@sandboxxjs/bdd@workspace:bdd"],
 
-    "@sandboxjs/cli": ["@sandboxjs/cli@workspace:packages/cli"],
+    "@sandboxxjs/cli": ["@sandboxxjs/cli@workspace:packages/cli"],
 
-    "@sandboxjs/cloudflare-isolator": ["@sandboxjs/cloudflare-isolator@workspace:services/cloudflare-isolator"],
+    "@sandboxxjs/cloudflare-isolator": ["@sandboxxjs/cloudflare-isolator@workspace:services/cloudflare-isolator"],
 
-    "@sandboxjs/core": ["@sandboxjs/core@workspace:packages/core"],
+    "@sandboxxjs/core": ["@sandboxxjs/core@workspace:packages/core"],
 
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
 

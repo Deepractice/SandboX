@@ -1,5 +1,5 @@
 {
-  "name": "@sandboxjs/core",
+  "name": "@sandboxxjs/core",
   "version": "0.0.1",
   "description": "SandboX Core - Secure code execution engine",
   "keywords": [
@@ -43,6 +43,6 @@
   },
   "dependencies": {
     "execa": "^9.6.1",
-    "@sandboxjs/cloudflare-isolator": "workspace:*"
+    "@sandboxxjs/cloudflare-isolator": "workspace:*"
   }
 }

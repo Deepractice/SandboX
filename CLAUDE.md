@@ -63,7 +63,7 @@ The architecture follows a **Runtime + Isolator** pattern that separates "what t
 └─────────────┬───────────────────────┘
               │
 ┌─────────────▼───────────────────────┐
-│         @sandboxjs/core             │
+│         @sandboxxjs/core             │
 │                                     │
 │  ┌──────────────────────────────┐  │
 │  │   Sandbox (main class)       │  │
@@ -114,7 +114,7 @@ The architecture follows a **Runtime + Isolator** pattern that separates "what t
 
 ```
 packages/
-  core/           # Core implementation (@sandboxjs/core)
+  core/           # Core implementation (@sandboxxjs/core)
     src/
       Sandbox.ts           # Main orchestrator
       types.ts             # Core type definitions
@@ -132,7 +132,7 @@ packages/
       createSandbox.ts     # Factory function
       SandboxManager.ts    # Multi-sandbox manager
 
-  cli/            # CLI tool (@sandboxjs/cli)
+  cli/            # CLI tool (@sandboxxjs/cli)
 
 services/
   cloudflare-isolator/  # Cloudflare Workers service for remote execution

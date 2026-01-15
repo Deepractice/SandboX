@@ -22,4 +22,4 @@ export {
   TimeoutError,
   IsolationError,
   FileSystemError,
-} from "@sandboxjs/core";
+} from "@sandboxxjs/core";

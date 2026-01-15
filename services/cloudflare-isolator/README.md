@@ -1,4 +1,4 @@
-# @sandboxjs/cloudflare-isolator
+# @sandboxxjs/cloudflare-isolator
 
 Docker-based code execution server for SandboX.
 
@@ -13,7 +13,7 @@ Used by `CloudflareContainerIsolator` in `sandboxjs`.
 ### As a binary
 
 ```bash
-npm install @sandboxjs/cloudflare-isolator
+npm install @sandboxxjs/cloudflare-isolator
 
 # Start server
 cloudflare-isolator
@@ -25,7 +25,7 @@ PORT=9000 cloudflare-isolator
 ### Programmatic
 
 ```typescript
-import { createSandbox } from "@sandboxjs/sandbox";
+import { createSandbox } from "@sandboxxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",

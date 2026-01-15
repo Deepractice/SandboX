@@ -1,5 +1,5 @@
 /**
- * Bun Build Script for @sandboxjs/cli
+ * Bun Build Script for @sandboxxjs/cli
  * ESM-only modern build
  */
 
@@ -10,7 +10,7 @@ const outdir = "./dist";
 
 await Bun.$`rm -rf ${outdir}`;
 
-console.log(`Building @sandboxjs/cli v${pkg.version}\n`);
+console.log(`Building @sandboxxjs/cli v${pkg.version}\n`);
 
 const result = await Bun.build({
   entrypoints: ["src/index.ts"],

@@ -32,13 +32,13 @@
 ## Installation
 
 ```bash
-npm install @sandboxjs/sandbox
+npm install @sandboxxjs/sandbox
 ```
 
 ## Quick Start
 
 ```typescript
-import { createSandbox } from "@sandboxjs/sandbox";
+import { createSandbox } from "@sandboxxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",
@@ -124,16 +124,16 @@ const prodSandbox = createSandbox({ runtime: "node", isolator: "e2b" });
 
 ## Packages
 
-| Package                              | Description         |
-| ------------------------------------ | ------------------- |
-| [`sandboxxjs`](./packages/sandboxjs) | Main API            |
-| [`@sandboxjs/core`](./packages/core) | Core implementation |
-| [`@sandboxjs/cli`](./packages/cli)   | CLI tool            |
+| Package                               | Description         |
+| ------------------------------------- | ------------------- |
+| [`sandboxxjs`](./packages/sandboxjs)  | Main API            |
+| [`@sandboxxjs/core`](./packages/core) | Core implementation |
+| [`@sandboxxjs/cli`](./packages/cli)   | CLI tool            |
 
 ## CLI
 
 ```bash
-npm install -g @sandboxjs/cli
+npm install -g @sandboxxjs/cli
 
 # Run code
 sandbox run node -c "console.log('hello')"

@@ -1,11 +1,11 @@
-# @sandboxjs/cli
+# @sandboxxjs/cli
 
 CLI tool for SandboX.
 
 ## Installation
 
 ```bash
-npm install -g @sandboxjs/cli
+npm install -g @sandboxxjs/cli
 ```
 
 ## Usage

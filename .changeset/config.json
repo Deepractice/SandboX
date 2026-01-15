@@ -2,10 +2,12 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["sandboxxjs", "@sandboxjs/core", "@sandboxjs/cli", "@sandboxjs/cloudflare-isolator"]],
+  "fixed": [
+    ["sandboxxjs", "@sandboxxjs/core", "@sandboxxjs/cli", "@sandboxxjs/cloudflare-isolator"]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@sandboxjs/bdd"]
+  "ignore": ["@sandboxxjs/bdd"]
 }

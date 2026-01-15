@@ -1,8 +1,8 @@
 ---
-"@sandboxjs/sandbox": minor
-"@sandboxjs/core": minor
-"@sandboxjs/cli": minor
-"@sandboxjs/cloudflare-isolator": minor
+"@sandboxxjs/sandbox": minor
+"@sandboxxjs/core": minor
+"@sandboxxjs/cli": minor
+"@sandboxxjs/cloudflare-isolator": minor
 ---
 
 Initial release of SandboX

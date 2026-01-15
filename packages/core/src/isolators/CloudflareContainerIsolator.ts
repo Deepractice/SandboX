@@ -42,10 +42,10 @@ export class CloudflareContainerIsolator extends Isolator {
    */
   private getBinaryPath(): string {
     try {
-      // Resolve the cli.js from @sandboxjs/cloudflare-isolator package
-      return require.resolve("@sandboxjs/cloudflare-isolator");
+      // Resolve the cli.js from @sandboxxjs/cloudflare-isolator package
+      return require.resolve("@sandboxxjs/cloudflare-isolator");
     } catch {
-      throw new ExecutionError("@sandboxjs/cloudflare-isolator not found. Run: bun install");
+      throw new ExecutionError("@sandboxxjs/cloudflare-isolator not found. Run: bun install");
     }
   }
 

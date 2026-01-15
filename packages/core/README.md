@@ -1,4 +1,4 @@
-# @@sandboxjs/sandbox/core
+# @@sandboxxjs/sandbox/core
 
 Core implementation for SandboX - secure code execution engine.
 
@@ -13,13 +13,13 @@ Core implementation for SandboX - secure code execution engine.
 ## Installation
 
 ```bash
-npm install @@sandboxjs/sandbox/core
+npm install @@sandboxxjs/sandbox/core
 ```
 
 ## Usage
 
 ```typescript
-import { Sandbox, LocalIsolator } from "@@sandboxjs/sandbox/core";
+import { Sandbox, LocalIsolator } from "@@sandboxxjs/sandbox/core";
 
 const isolator = new LocalIsolator("node");
 const sandbox = new Sandbox({

@@ -1,5 +1,5 @@
 /**
- * @sandboxjs/core
+ * @sandboxxjs/core
  * Core functionality for secure code execution
  */
 

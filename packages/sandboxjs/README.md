@@ -1,17 +1,17 @@
-# @sandboxjs/sandbox
+# @sandboxxjs/sandbox
 
 Multi-language secure execution sandbox for AI Agents.
 
 ## Installation
 
 ```bash
-npm install @sandboxjs/sandbox
+npm install @sandboxxjs/sandbox
 ```
 
 ## Quick Start
 
 ```typescript
-import { createSandbox } from "@sandboxjs/sandbox";
+import { createSandbox } from "@sandboxxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",

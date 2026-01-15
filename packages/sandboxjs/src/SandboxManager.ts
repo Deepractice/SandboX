@@ -3,7 +3,7 @@
  * TODO: Implement sandbox lifecycle management
  */
 
-import { Sandbox } from "@sandboxjs/core";
+import { Sandbox } from "@sandboxxjs/core";
 
 export class SandboxManager {
   private sandboxes: Map<string, Sandbox> = new Map();

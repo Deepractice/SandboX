@@ -1,5 +1,5 @@
 /**
- * @sandboxjs/cli
+ * @sandboxxjs/cli
  * CLI for SandboX
  */
 
