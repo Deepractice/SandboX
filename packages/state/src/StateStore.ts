@@ -95,15 +95,19 @@ class ResourceXStateStore implements StateStore {
   }
 
   private logUrl(key: string): string {
-    return `@text:agentvm://sandbox/state-logs/${key}.json`;
+    return `@text:agentvm://sandbox/${key}/state.json`;
   }
 
   private logPath(sandboxId: string): string {
     const path = require("path");
-    return path.join(this.basePath, "state-logs", `${sandboxId}.jsonl`);
+    return path.join(this.basePath, sandboxId, "state.jsonl");
   }
 
-  private blobUrl(ref: string): string {
+  private blobUrl(ref: string, sandboxId?: string): string {
+    if (sandboxId) {
+      return `@binary:agentvm://sandbox/${sandboxId}/blobs/${ref}`;
+    }
+    // Fallback for old API (without sandboxId)
     return `@binary:agentvm://sandbox/blobs/${ref}`;
   }
 

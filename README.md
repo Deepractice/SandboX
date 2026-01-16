@@ -202,7 +202,7 @@ const sandbox = createSandbox({
 console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi"
 
 // Operations are automatically appended to:
-// ~/.agentvm/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
+// ~/.agentvm/sandbox/sandbox-{id}/state.jsonl
 await sandbox.fs.write("config.json", "{}");
 sandbox.env.set("KEY", "value");
 
@@ -222,7 +222,7 @@ const newSandbox = createSandbox({
 **Storage:**
 
 - Format: JSON Lines (`.jsonl`) for true append-only operations
-- Location: `~/.agentvm/sandbox/state-logs/{sandbox-id}.jsonl`
+- Location: `~/.agentvm/sandbox/{sandbox-id}/state.jsonl`
 - Testing: Use `store: "memory"` to disable file persistence
 
 ## How it Works

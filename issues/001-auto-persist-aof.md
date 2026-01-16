@@ -63,7 +63,7 @@ await store.saveLog("my-custom-key", log.toJSON()); // ❌ 冗长且易错
 ### 决策 3：AOF 追加实现
 
 - **方案**：原生 `fs.appendFile` + JSON Lines 格式
-- **路径**：ResourceX 负责路径解析（`~/.agentvm/sandbox/state-logs/`）
+- **路径**：每个 sandbox 独立目录（`~/.agentvm/sandbox/{id}/`）
 - **追加**：原生 fs 实现，不依赖 ResourceX 的写入能力
 
 ### 决策 4：listLogs 实现
@@ -105,7 +105,7 @@ console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi" ✅ 自动生成
 
 // 每个操作自动追加到文件（JSON Lines 格式）
 await sandbox.fs.write("config.json", "{}");
-// → 自动追加：~/.agentvm/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
+// → 自动追加：~/.agentvm/sandbox/{id}/state.jsonl
 //   {"op":"fs.write","args":{"path":"config.json","data":"{}"}}
 
 sandbox.env.set("KEY", "value");
@@ -236,7 +236,7 @@ import { dirname } from "path";
 
 // ResourceXStateStore
 async appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void> {
-  const filePath = this.logPath(sandboxId); // ~/.agentvm/sandbox/state-logs/{id}.jsonl
+  const filePath = this.logPath(sandboxId); // ~/.agentvm/sandbox/{id}/state.jsonl
 
   // 确保目录存在
   await mkdir(dirname(filePath), { recursive: true });
@@ -247,7 +247,7 @@ async appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void> {
 }
 
 private logPath(sandboxId: string): string {
-  return `${this.basePath}/state-logs/${sandboxId}.jsonl`;
+  return `${this.basePath}/${sandboxId}/state.jsonl`;
 }
 ```
 
@@ -346,7 +346,7 @@ Scenario: Auto-persist on every operation (enableRecord = autoPersist)
   Given I create a sandbox with enableRecord true
   When I write "data" to file "test.txt"
   And I set environment variable "KEY" to "value"
-  Then the StateLog file should exist at "~/.agentvm/sandbox/state-logs/{id}.jsonl"
+  Then the StateLog file should exist at "~/.agentvm/sandbox/{id}/state.jsonl"
   And the file should contain 2 lines
 
 @persistence @memory
@@ -407,7 +407,7 @@ const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
   state: {
-    enableRecord: true, // 自动持久化到 ~/.agentvm/sandbox/state-logs/{id}.jsonl
+    enableRecord: true, // 自动持久化到 ~/.agentvm/sandbox/{id}/state.jsonl
   },
 });
 
