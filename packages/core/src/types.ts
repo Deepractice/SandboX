@@ -19,6 +19,9 @@ export interface SandboxConfig {
   /** Resource limits */
   limits?: ResourceLimits;
 
+  /** Initial environment variables */
+  env?: Record<string, string>;
+
   /** Node-specific configuration */
   node?: NodeConfig;
 
@@ -54,17 +57,11 @@ export interface PythonConfig {
 // ============================================
 
 /**
- * Base Sandbox interface - 4 core APIs
+ * Base Sandbox interface - 2 core APIs
  */
 export interface Sandbox {
   /** Execute shell command */
   shell(command: string): Promise<ShellResult>;
-
-  /** Upload file to sandbox */
-  upload(path: string, data: string | Buffer): Promise<void>;
-
-  /** Download file from sandbox */
-  download(path: string): Promise<string | Buffer>;
 
   /** Destroy sandbox */
   destroy(): Promise<void>;
@@ -87,22 +84,54 @@ export interface ShellResult {
 }
 
 // ============================================
-// Mixin Capability Interfaces
+// State Layer Interfaces
 // ============================================
 
 /**
- * File system capability
+ * File system operations
  */
-export interface WithFS {
-  fs: FileSystem;
-}
-
 export interface FileSystem {
   read(path: string): Promise<string>;
   write(path: string, data: string): Promise<void>;
   list(path: string): Promise<string[]>;
   exists(path: string): Promise<boolean>;
   delete(path: string): Promise<void>;
+}
+
+/**
+ * Environment variables
+ */
+export interface Environment {
+  get(key: string): string | undefined;
+  set(key: string, value: string): void;
+  has(key: string): boolean;
+  delete(key: string): void;
+  keys(): string[];
+  all(): Record<string, string>;
+}
+
+/**
+ * Key-value storage
+ */
+export interface Storage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+  keys(): string[];
+}
+
+// ============================================
+// Mixin Capability Interfaces
+// ============================================
+
+/**
+ * State capability (fs + env + storage)
+ */
+export interface WithState {
+  fs: FileSystem;
+  env: Environment;
+  storage: Storage;
 }
 
 /**
@@ -129,14 +158,14 @@ export interface ExecuteResult {
 // Composed Types
 // ============================================
 
-/** Node sandbox = Base + FS + Execute */
-export type NodeSandbox = Sandbox & WithFS & WithExecute;
+/** Node sandbox = Base + State + Execute */
+export type NodeSandbox = Sandbox & WithState & WithExecute;
 
-/** Python sandbox = Base + FS + Execute */
-export type PythonSandbox = Sandbox & WithFS & WithExecute;
+/** Python sandbox = Base + State + Execute */
+export type PythonSandbox = Sandbox & WithState & WithExecute;
 
-/** Sandbox with FS */
-export type FSSandbox = Sandbox & WithFS;
+/** Sandbox with State only */
+export type StateSandbox = Sandbox & WithState;
 
 // ============================================
 // Mixin Constructor Types

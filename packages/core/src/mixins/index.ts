@@ -2,6 +2,6 @@
  * Mixin exports
  */
 
-export { withFS } from "./withFS.js";
+export { withState } from "./withState.js";
 export { withNodeExecute } from "./withNodeExecute.js";
 export { withPythonExecute } from "./withPythonExecute.js";

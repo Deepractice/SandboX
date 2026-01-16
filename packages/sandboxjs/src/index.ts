@@ -10,8 +10,12 @@ export { SandboxManager } from "./SandboxManager.js";
 export {
   // Classes
   BaseSandbox,
+  // State implementations
+  StateFS,
+  StateEnv,
+  StateStorage,
   // Mixins
-  withFS,
+  withState,
   withNodeExecute,
   withPythonExecute,
   // Types
@@ -22,14 +26,16 @@ export {
   type ShellResult,
   type ExecuteResult,
   type FileSystem,
+  type Environment,
+  type Storage,
   type ResourceLimits,
   type NodeConfig,
   type PythonConfig,
-  type WithFS,
+  type WithState,
   type WithExecute,
   type NodeSandbox,
   type PythonSandbox,
-  type FSSandbox,
+  type StateSandbox,
   // Errors
   SandboxError,
   ExecutionError,

@@ -37,44 +37,47 @@ bun add sandboxxjs
 
 ## Quick Start
 
-### Base Sandbox (4 Core APIs)
+### Base Sandbox (2 Core APIs)
 
 ```typescript
 import { createSandbox } from "sandboxxjs";
 
-// Create a base sandbox
+// Create a base sandbox (shell only)
 const sandbox = createSandbox({ isolator: "local" });
 
 // Execute shell commands
 const result = await sandbox.shell("echo 'Hello World'");
 console.log(result.stdout); // "Hello World"
 
-// Upload file to sandbox
-await sandbox.upload("/data/input.txt", "Hello from outside");
-
-// Download file from sandbox
-const content = await sandbox.download("/data/input.txt");
-
 // Cleanup
 await sandbox.destroy();
 ```
 
-### Node.js Sandbox
+### Node.js Sandbox (with State)
 
 ```typescript
 const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
+  env: { API_KEY: "xxx" }, // Initial environment variables
 });
 
 // Execute Node.js code directly
 const result = await sandbox.execute("console.log('Hello from Node')");
 
-// File system operations via mixin
+// File system operations
 await sandbox.fs.write("/app/data.json", '{"key": "value"}');
 const content = await sandbox.fs.read("/app/data.json");
 const exists = await sandbox.fs.exists("/app/data.json");
 const files = await sandbox.fs.list("/app");
+
+// Environment variables
+const apiKey = sandbox.env.get("API_KEY");
+sandbox.env.set("DEBUG", "true");
+
+// Key-value storage
+sandbox.storage.setItem("lastRun", Date.now().toString());
+const lastRun = sandbox.storage.getItem("lastRun");
 
 await sandbox.destroy();
 ```
@@ -97,7 +100,7 @@ import pandas as pd
 df = pd.read_csv('/data/input.csv')
 df.to_csv('/data/output.csv')
 `);
-const output = await sandbox.download("/data/output.csv");
+const output = await sandbox.fs.read("/data/output.csv");
 
 await sandbox.destroy();
 ```
@@ -106,23 +109,25 @@ await sandbox.destroy();
 
 ### Base Sandbox
 
-| Method               | Description                |
-| -------------------- | -------------------------- |
-| `shell(command)`     | Execute shell command      |
-| `upload(path, data)` | Upload file to sandbox     |
-| `download(path)`     | Download file from sandbox |
-| `destroy()`          | Cleanup sandbox resources  |
+| Method           | Description               |
+| ---------------- | ------------------------- |
+| `shell(command)` | Execute shell command     |
+| `destroy()`      | Cleanup sandbox resources |
 
-### Node/Python Sandbox (via Mixin)
+### Node/Python Sandbox (via State Mixin)
 
-| Method                 | Description             |
-| ---------------------- | ----------------------- |
-| `execute(code)`        | Execute code in runtime |
-| `fs.read(path)`        | Read file content       |
-| `fs.write(path, data)` | Write file content      |
-| `fs.list(path)`        | List directory contents |
-| `fs.exists(path)`      | Check if file exists    |
-| `fs.delete(path)`      | Delete file             |
+| Method                        | Description              |
+| ----------------------------- | ------------------------ |
+| `execute(code)`               | Execute code in runtime  |
+| `fs.read(path)`               | Read file content        |
+| `fs.write(path, data)`        | Write file content       |
+| `fs.list(path)`               | List directory contents  |
+| `fs.exists(path)`             | Check if file exists     |
+| `fs.delete(path)`             | Delete file              |
+| `env.get(key)`                | Get environment variable |
+| `env.set(key, value)`         | Set environment variable |
+| `storage.getItem(key)`        | Get storage value        |
+| `storage.setItem(key, value)` | Set storage value        |
 
 ## Configuration
 
@@ -133,6 +138,9 @@ interface SandboxConfig {
 
   // Runtime type (default: "shell")
   runtime?: "shell" | "node" | "python";
+
+  // Initial environment variables
+  env?: Record<string, string>;
 
   // Resource limits
   limits?: {
@@ -176,13 +184,13 @@ const prodSandbox = createSandbox({ isolator: "e2b", runtime: "node" });
 createSandbox({ isolator, runtime? })
          │
          ├── runtime: "shell" (default)
-         │   └── BaseSandbox (shell, upload, download, destroy)
+         │   └── BaseSandbox (shell, destroy)
          │
          ├── runtime: "node"
-         │   └── BaseSandbox + withFS + withNodeExecute
+         │   └── BaseSandbox + withState (fs, env, storage) + withNodeExecute
          │
          └── runtime: "python"
-             └── BaseSandbox + withFS + withPythonExecute
+             └── BaseSandbox + withState (fs, env, storage) + withPythonExecute
 ```
 
 ## Packages

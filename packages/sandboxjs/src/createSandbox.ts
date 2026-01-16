@@ -4,7 +4,7 @@
 
 import {
   BaseSandbox,
-  withFS,
+  withState,
   withNodeExecute,
   withPythonExecute,
   type SandboxConfig,
@@ -15,9 +15,9 @@ import {
 
 /**
  * Create sandbox based on config
- * - runtime: "shell" -> BaseSandbox (4 core APIs)
- * - runtime: "node" -> NodeSandbox (+ fs + execute)
- * - runtime: "python" -> PythonSandbox (+ fs + execute)
+ * - runtime: "shell" -> BaseSandbox (shell, destroy)
+ * - runtime: "node" -> NodeSandbox (+ state + execute)
+ * - runtime: "python" -> PythonSandbox (+ state + execute)
  */
 
 export function createSandbox(config: SandboxConfig & { runtime: "node" }): NodeSandbox;
@@ -29,11 +29,11 @@ export function createSandbox(config: SandboxConfig): Sandbox | NodeSandbox | Py
 
   switch (runtime) {
     case "node": {
-      const NodeSandbox = withNodeExecute(withFS(BaseSandbox));
+      const NodeSandbox = withNodeExecute(withState(BaseSandbox));
       return new NodeSandbox(config);
     }
     case "python": {
-      const PythonSandbox = withPythonExecute(withFS(BaseSandbox));
+      const PythonSandbox = withPythonExecute(withState(BaseSandbox));
       return new PythonSandbox(config);
     }
     default: {

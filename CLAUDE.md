@@ -52,9 +52,9 @@ bun run release         # Publish packages (uses changesets)
 
 ## Architecture
 
-### Core Design Pattern: Base Sandbox + Mixin Extensions
+### Core Design Pattern: Base Sandbox + State Layer + Mixin Extensions
 
-The architecture follows a **Base Sandbox + Mixin** pattern:
+The architecture follows a **Base Sandbox + State + Mixin** pattern:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -67,11 +67,18 @@ The architecture follows a **Base Sandbox + Mixin** pattern:
          ▼                ▼                ▼
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
 │ BaseSandbox │  │ NodeSandbox │  │PythonSandbox│
-│ (4 APIs)    │  │ +withFS     │  │ +withFS     │
-│             │  │ +withExecute│  │ +withExecute│
+│ (2 APIs)    │  │ +withState  │  │ +withState  │
+│ shell       │  │ +withExecute│  │ +withExecute│
+│ destroy     │  │             │  │             │
 └─────────────┘  └─────────────┘  └─────────────┘
-         │                │                │
-         └────────────────┴────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+         ▼               ▼               ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│  State.fs    │ │  State.env   │ │State.storage │
+│  (files)     │ │  (env vars)  │ │  (KV store)  │
+└──────────────┘ └──────────────┘ └──────────────┘
                           │
                           ▼
               ┌───────────────────────┐
@@ -81,20 +88,28 @@ The architecture follows a **Base Sandbox + Mixin** pattern:
               └───────────────────────┘
 ```
 
-### Base Sandbox (4 Core APIs)
+### Base Sandbox (2 Core APIs)
 
 ```typescript
 interface Sandbox {
   shell(command: string): Promise<ShellResult>;
-  upload(path: string, data: string | Buffer): Promise<void>;
-  download(path: string): Promise<string | Buffer>;
   destroy(): Promise<void>;
+}
+```
+
+### State Layer (via withState mixin)
+
+```typescript
+interface WithState {
+  fs: FileSystem; // File operations
+  env: Environment; // Environment variables
+  storage: Storage; // Key-value storage
 }
 ```
 
 ### Mixin Extensions
 
-- **withFS**: Adds file system operations (read, write, list, exists, delete)
+- **withState**: Adds state capabilities (fs, env, storage)
 - **withNodeExecute**: Adds `execute(code)` for Node.js
 - **withPythonExecute**: Adds `execute(code)` for Python
 
@@ -109,22 +124,28 @@ interface Sandbox {
   - Planned: E2B, Docker isolators
 - Responsibilities:
   - Execute shell commands in isolated environment
-  - Handle file upload/download
   - Handle cleanup/teardown
 
-**2. Mixins (capability extensions)**
+**2. State (state layer)**
+
+- Location: `packages/core/src/state/`
+- `StateFS.ts`: File system operations (via shell commands)
+- `StateEnv.ts`: Environment variables (in-memory)
+- `StateStorage.ts`: Key-value storage (in-memory)
+
+**3. Mixins (capability extensions)**
 
 - Location: `packages/core/src/mixins/`
-- `withFS.ts`: File system operations
+- `withState.ts`: Adds fs, env, storage
 - `withNodeExecute.ts`: Node.js code execution
 - `withPythonExecute.ts`: Python code execution
 
-**3. Sandbox (orchestration)**
+**4. Sandbox (orchestration)**
 
 - Location: `packages/core/src/Sandbox.ts`
 - Responsibilities:
   - Create isolator based on config
-  - Provide 4 core APIs (shell, upload, download, destroy)
+  - Provide 2 core APIs (shell, destroy)
   - Base class for mixin composition
 
 ### Package Structure
@@ -140,8 +161,12 @@ packages/
         Isolator.ts        # Abstract base
         LocalIsolator.ts   # Child process isolation
         CloudflareContainerIsolator.ts
+      state/               # State layer implementations
+        StateFS.ts         # File system state
+        StateEnv.ts        # Environment state
+        StateStorage.ts    # KV storage state
       mixins/              # Capability extensions
-        withFS.ts          # File system mixin
+        withState.ts       # State mixin (fs, env, storage)
         withNodeExecute.ts # Node.js execute mixin
         withPythonExecute.ts # Python execute mixin
 
@@ -158,18 +183,20 @@ services/
 
 ### Important Design Decisions
 
-1. **Base Sandbox is minimal**: Only 4 APIs (shell, upload, download, destroy)
+1. **Base Sandbox is minimal**: Only 2 APIs (shell, destroy)
 
-2. **Mixins add capabilities**: fs and execute are added via TypeScript mixins based on runtime config
+2. **State is separate layer**: fs, env, storage are part of State, not base Sandbox
 
-3. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
+3. **Mixins add capabilities**: State and execute are added via TypeScript mixins based on runtime config
 
-4. **Runtime determines mixins**:
+4. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
+
+5. **Runtime determines mixins**:
    - `runtime: "shell"` → BaseSandbox only
-   - `runtime: "node"` → BaseSandbox + withFS + withNodeExecute
-   - `runtime: "python"` → BaseSandbox + withFS + withPythonExecute
+   - `runtime: "node"` → BaseSandbox + withState + withNodeExecute
+   - `runtime: "python"` → BaseSandbox + withState + withPythonExecute
 
-5. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
+6. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
 
 ## Key Types
 
@@ -177,20 +204,13 @@ services/
 interface SandboxConfig {
   isolator: "local" | "cloudflare" | "e2b" | "docker";
   runtime?: "shell" | "node" | "python"; // default: "shell"
+  env?: Record<string, string>; // initial environment variables
   limits?: ResourceLimits;
   node?: NodeConfig;
   python?: PythonConfig;
 }
 
 interface ShellResult {
-  success: boolean;
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  executionTime: number;
-}
-
-interface ExecuteResult {
   success: boolean;
   stdout: string;
   stderr: string;
@@ -205,13 +225,30 @@ interface FileSystem {
   exists(path: string): Promise<boolean>;
   delete(path: string): Promise<void>;
 }
+
+interface Environment {
+  get(key: string): string | undefined;
+  set(key: string, value: string): void;
+  has(key: string): boolean;
+  delete(key: string): void;
+  keys(): string[];
+  all(): Record<string, string>;
+}
+
+interface Storage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+  keys(): string[];
+}
 ```
 
 ## Testing Strategy
 
 - **Unit tests**: Each package has its own `bun test` suite
 - **BDD tests**: Located in `bdd/` directory, use Cucumber.js
-  - Features: `execute.feature`, `filesystem.feature`, `cloudflare.feature`
+  - Features: `execute.feature`, `filesystem.feature`, `state.feature`, `cloudflare.feature`
   - Run with: `bun run test:bdd` or `cd bdd && bun run test`
 - **Test tags**: Use `bun run test:tags "@tagname"` to run specific BDD scenarios
 
@@ -239,10 +276,18 @@ interface FileSystem {
 When implementing a new isolator:
 
 1. Create new class in `packages/core/src/isolators/` extending `Isolator`
-2. Implement `shell()`, `upload()`, `download()`, and `destroy()` methods
+2. Implement `shell()` and `destroy()` methods
 3. Add to switch statement in `BaseSandbox.createIsolator()` (in `Sandbox.ts`)
 4. Handle path resolution relative to isolation boundary
 5. Consider timeout handling, error mapping, and cleanup in destroy()
+
+## Adding New State Implementations
+
+When implementing a new state backend (e.g., Redis storage):
+
+1. Create new class in `packages/core/src/state/`
+2. Implement the corresponding interface (Storage, Environment, etc.)
+3. Update `withState.ts` mixin to use the new implementation based on config
 
 ## Adding New Mixins
 
@@ -258,4 +303,4 @@ When implementing a new mixin:
 - **Forgetting cleanup**: Always call `sandbox.destroy()` to clean up work directories and resources
 - **Path assumptions**: File paths in LocalIsolator are relative to `.sandbox/session-*`, not project root
 - **Timeout defaults**: Default timeout is 30s, configurable via `limits.timeout`
-- **Mixin availability**: `execute()` and `fs` are only available for `runtime: "node"` or `runtime: "python"`, not for base shell sandbox
+- **State availability**: `fs`, `env`, `storage`, and `execute()` are only available for `runtime: "node"` or `runtime: "python"`, not for base shell sandbox
