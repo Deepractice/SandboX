@@ -1,5 +1,23 @@
 # @sandboxxjs/core
 
+## 0.4.0
+
+### Minor Changes
+
+- ddc7413: feat: auto-persist state with AOF pattern
+  - Add unique ID to all sandbox instances (sandbox-{nanoid})
+  - Auto-persist operations to disk when enableRecord: true
+  - Use JSON Lines (.jsonl) format for true append-only operations
+  - Add memory store option for testing
+  - Storage location: ~/.agentvm/sandbox/{sandbox-id}/state.jsonl
+
+### Patch Changes
+
+- Updated dependencies [ddc7413]
+- Updated dependencies [0e05bb0]
+  - @sandboxxjs/state@0.3.0
+  - @sandboxxjs/cloudflare-isolator@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

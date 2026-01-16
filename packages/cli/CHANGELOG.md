@@ -1,5 +1,12 @@
 # @sandboxxjs/cli
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [ddc7413]
+  - sandboxxjs@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes
