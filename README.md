@@ -1,15 +1,12 @@
 <div align="center">
-  <h1>SandboxX</h1>
+  <h1>SandboX</h1>
   <p>
     <strong>Multi-language secure execution sandbox for AI Agents</strong>
   </p>
-  <p>AI Agent 多语言安全执行沙箱</p>
+  <p>AI Agent multi-language secure execution sandbox</p>
 
   <p>
     <b>Multi-Language</b> · <b>Multi-Isolator</b> · <b>Secure by Default</b>
-  </p>
-  <p>
-    <b>多语言</b> · <b>多隔离器</b> · <b>默认安全</b>
   </p>
 
   <p>
@@ -21,105 +18,171 @@
 
 ---
 
-## What is SandboxX?
+## What is SandboX?
 
-**SandboxX** provides secure, isolated execution environments for running untrusted code from AI Agents.
+**SandboX** provides secure, isolated execution environments for running untrusted code from AI Agents.
 
-- **Multi-Language**: Node.js, Python, Bash, Docker
-- **Multi-Isolator**: Local (child_process), E2B (microVM), Firecracker, Docker
+- **Multi-Language**: Shell, Node.js, Python
+- **Multi-Isolator**: Local (child_process), Cloudflare, E2B (microVM), Docker
 - **Pluggable Architecture**: Switch isolators without changing code
+- **Mixin-based Extensions**: Compose capabilities as needed
 
 ## Installation
 
 ```bash
-npm install @sandboxxjs/sandbox
+npm install sandboxxjs
+# or
+bun add sandboxxjs
 ```
 
 ## Quick Start
 
+### Base Sandbox (4 Core APIs)
+
 ```typescript
-import { createSandbox } from "@sandboxxjs/sandbox";
+import { createSandbox } from "sandboxxjs";
 
-const sandbox = createSandbox({
-  runtime: "node",
-  isolator: "local",
-});
+// Create a base sandbox
+const sandbox = createSandbox({ isolator: "local" });
 
-const result = await sandbox.execute({
-  code: 'console.log("Hello World"); return 42;',
-});
-
+// Execute shell commands
+const result = await sandbox.shell("echo 'Hello World'");
 console.log(result.stdout); // "Hello World"
-console.log(result.data); // 42
+
+// Upload file to sandbox
+await sandbox.upload("/data/input.txt", "Hello from outside");
+
+// Download file from sandbox
+const content = await sandbox.download("/data/input.txt");
+
+// Cleanup
+await sandbox.destroy();
 ```
 
-## Multi-Language Support
-
-```typescript
-// Node.js
-const sandbox = createSandbox({ runtime: "node", isolator: "local" });
-await sandbox.execute({ code: 'console.log("Hello from Node")' });
-
-// Python
-const sandbox = createSandbox({ runtime: "python", isolator: "local" });
-await sandbox.execute({ code: 'print("Hello from Python")' });
-
-// Bash
-const sandbox = createSandbox({ runtime: "bash", isolator: "local" });
-await sandbox.execute({ code: 'echo "Hello from Bash"' });
-```
-
-## File System Operations
-
-```typescript
-// Write file
-await sandbox.writeFile("/tmp/input.txt", "data");
-
-// Read file
-const content = await sandbox.readFile("/tmp/input.txt");
-
-// fs namespace (E2B-style)
-await sandbox.fs.write("/tmp/file.txt", "data");
-const content = await sandbox.fs.read("/tmp/file.txt");
-const files = await sandbox.fs.list("/tmp");
-const exists = await sandbox.fs.exists("/tmp/file.txt");
-```
-
-## Environment Variables
-
-```typescript
-const result = await sandbox.execute({
-  code: "console.log(process.env.API_KEY)",
-  env: { API_KEY: "secret" },
-});
-```
-
-## Resource Limits
+### Node.js Sandbox
 
 ```typescript
 const sandbox = createSandbox({
-  runtime: "node",
   isolator: "local",
-  limits: {
-    timeout: 30000, // 30s execution timeout
-    memory: 128 * 1024 * 1024, // 128MB memory limit
-  },
+  runtime: "node",
 });
+
+// Execute Node.js code directly
+const result = await sandbox.execute("console.log('Hello from Node')");
+
+// File system operations via mixin
+await sandbox.fs.write("/app/data.json", '{"key": "value"}');
+const content = await sandbox.fs.read("/app/data.json");
+const exists = await sandbox.fs.exists("/app/data.json");
+const files = await sandbox.fs.list("/app");
+
+await sandbox.destroy();
+```
+
+### Python Sandbox
+
+```typescript
+const sandbox = createSandbox({
+  isolator: "local",
+  runtime: "python",
+});
+
+// Execute Python code
+const result = await sandbox.execute("print('Hello from Python')");
+
+// File operations
+await sandbox.fs.write("/data/input.csv", csvData);
+await sandbox.execute(`
+import pandas as pd
+df = pd.read_csv('/data/input.csv')
+df.to_csv('/data/output.csv')
+`);
+const output = await sandbox.download("/data/output.csv");
+
+await sandbox.destroy();
+```
+
+## API Reference
+
+### Base Sandbox
+
+| Method               | Description                |
+| -------------------- | -------------------------- |
+| `shell(command)`     | Execute shell command      |
+| `upload(path, data)` | Upload file to sandbox     |
+| `download(path)`     | Download file from sandbox |
+| `destroy()`          | Cleanup sandbox resources  |
+
+### Node/Python Sandbox (via Mixin)
+
+| Method                 | Description             |
+| ---------------------- | ----------------------- |
+| `execute(code)`        | Execute code in runtime |
+| `fs.read(path)`        | Read file content       |
+| `fs.write(path, data)` | Write file content      |
+| `fs.list(path)`        | List directory contents |
+| `fs.exists(path)`      | Check if file exists    |
+| `fs.delete(path)`      | Delete file             |
+
+## Configuration
+
+```typescript
+interface SandboxConfig {
+  // Isolator type (required)
+  isolator: "local" | "cloudflare" | "e2b" | "docker";
+
+  // Runtime type (default: "shell")
+  runtime?: "shell" | "node" | "python";
+
+  // Resource limits
+  limits?: {
+    timeout?: number; // milliseconds
+    memory?: number; // bytes
+    cpu?: number; // percentage
+  };
+
+  // Node-specific config
+  node?: {
+    packageManager?: "npm" | "yarn" | "pnpm" | "bun";
+    version?: string;
+  };
+
+  // Python-specific config
+  python?: {
+    version?: string;
+    useVenv?: boolean;
+  };
+}
 ```
 
 ## Isolators
 
-| Isolator        | Isolation Level       | Startup Time | Use Case      |
-| --------------- | --------------------- | ------------ | ------------- |
-| **local**       | Process               | 10-50ms      | Development   |
-| **e2b**         | MicroVM (Firecracker) | 150ms        | Production    |
-| **firecracker** | MicroVM               | 150ms        | Self-hosted   |
-| **docker**      | Container             | 100-500ms    | Custom images |
+| Isolator       | Isolation Level       | Startup Time | Use Case        |
+| -------------- | --------------------- | ------------ | --------------- |
+| **local**      | Process               | 10-50ms      | Development     |
+| **cloudflare** | Container             | 100-500ms    | Edge deployment |
+| **e2b**        | MicroVM (Firecracker) | 150ms        | Production      |
+| **docker**     | Container             | 100-500ms    | Custom images   |
 
 ```typescript
 // Switch isolator without changing code
-const devSandbox = createSandbox({ runtime: "node", isolator: "local" });
-const prodSandbox = createSandbox({ runtime: "node", isolator: "e2b" });
+const devSandbox = createSandbox({ isolator: "local", runtime: "node" });
+const prodSandbox = createSandbox({ isolator: "e2b", runtime: "node" });
+```
+
+## Architecture
+
+```
+createSandbox({ isolator, runtime? })
+         │
+         ├── runtime: "shell" (default)
+         │   └── BaseSandbox (shell, upload, download, destroy)
+         │
+         ├── runtime: "node"
+         │   └── BaseSandbox + withFS + withNodeExecute
+         │
+         └── runtime: "python"
+             └── BaseSandbox + withFS + withPythonExecute
 ```
 
 ## Packages
@@ -130,21 +193,6 @@ const prodSandbox = createSandbox({ runtime: "node", isolator: "e2b" });
 | [`@sandboxxjs/core`](./packages/core) | Core implementation |
 | [`@sandboxxjs/cli`](./packages/cli)   | CLI tool            |
 
-## CLI
-
-```bash
-npm install -g @sandboxxjs/cli
-
-# Run code
-sandbox run node -c "console.log('hello')"
-
-# Run file
-sandbox run python ./script.py
-
-# List sandboxes
-sandbox list
-```
-
 ## Ecosystem
 
 Part of the [Deepractice](https://github.com/Deepractice) AI Agent infrastructure:
@@ -152,7 +200,7 @@ Part of the [Deepractice](https://github.com/Deepractice) AI Agent infrastructur
 - **[PromptX](https://github.com/Deepractice/PromptX)** - AI Agent context platform
 - **[AgentX](https://github.com/Deepractice/AgentX)** - AI Agent runtime platform
 - **[ResourceX](https://github.com/Deepractice/ResourceX)** - Unified resource manager (ARP)
-- **[ToolX](https://github.com/Deepractice/ToolX)** - Tool integration
+- **[ToolX](https://github.com/Deepractice/ToolX)** - Tool integration (Build System for SandboX)
 - **[UIX](https://github.com/Deepractice/UIX)** - AI-to-UI protocol layer
 
 ## Contributing
@@ -167,6 +215,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and guidelines.
 
 <div align="center">
   <p>
-    Built with ❤️ by <a href="https://github.com/Deepractice">Deepractice</a>
+    Built with care by <a href="https://github.com/Deepractice">Deepractice</a>
   </p>
 </div>

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SandboX is a multi-language secure execution sandbox for AI Agents. It provides isolated execution environments for running untrusted code from AI agents across multiple languages (Node.js, Python, Bash) and multiple isolation strategies (local, E2B, Firecracker, Docker, Cloudflare).
+SandboX is a multi-language secure execution sandbox for AI Agents. It provides isolated execution environments for running untrusted code from AI agents across multiple languages (Shell, Node.js, Python) and multiple isolation strategies (local, Cloudflare, E2B, Docker).
 
 ## Development Commands
 
@@ -52,32 +52,51 @@ bun run release         # Publish packages (uses changesets)
 
 ## Architecture
 
-### Core Design Pattern: Pluggable Isolation
+### Core Design Pattern: Base Sandbox + Mixin Extensions
 
-The architecture follows a **Runtime + Isolator** pattern that separates "what to run" from "how to isolate it":
+The architecture follows a **Base Sandbox + Mixin** pattern:
 
 ```
-┌─────────────────────────────────────┐
-│         sandboxjs Package           │  ← Public API
-│   createSandbox(), SandboxManager   │
-└─────────────┬───────────────────────┘
-              │
-┌─────────────▼───────────────────────┐
-│         @sandboxxjs/core             │
-│                                     │
-│  ┌──────────────────────────────┐  │
-│  │   Sandbox (main class)       │  │
-│  │   - Orchestrates execution   │  │
-│  │   - Event system             │  │
-│  │   - FileSystem proxy         │  │
-│  └──────┬───────────────────┬───┘  │
-│         │                   │      │
-│    ┌────▼─────┐      ┌──────▼────┐│
-│    │ Runtime  │      │ Isolator  ││
-│    │ (layer)  │      │ (layer)   ││
-│    └──────────┘      └───────────┘│
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    sandboxjs Package                         │
+│                    createSandbox()                           │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         │                │                │
+         ▼                ▼                ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│ BaseSandbox │  │ NodeSandbox │  │PythonSandbox│
+│ (4 APIs)    │  │ +withFS     │  │ +withFS     │
+│             │  │ +withExecute│  │ +withExecute│
+└─────────────┘  └─────────────┘  └─────────────┘
+         │                │                │
+         └────────────────┴────────────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │    Isolator Layer     │
+              │  Local / Cloudflare   │
+              │    / E2B / Docker     │
+              └───────────────────────┘
 ```
+
+### Base Sandbox (4 Core APIs)
+
+```typescript
+interface Sandbox {
+  shell(command: string): Promise<ShellResult>;
+  upload(path: string, data: string | Buffer): Promise<void>;
+  download(path: string): Promise<string | Buffer>;
+  destroy(): Promise<void>;
+}
+```
+
+### Mixin Extensions
+
+- **withFS**: Adds file system operations (read, write, list, exists, delete)
+- **withNodeExecute**: Adds `execute(code)` for Node.js
+- **withPythonExecute**: Adds `execute(code)` for Python
 
 ### Key Abstractions
 
@@ -87,28 +106,26 @@ The architecture follows a **Runtime + Isolator** pattern that separates "what t
 - Implementations:
   - `LocalIsolator`: Uses execa + child_process (fast, low isolation)
   - `CloudflareContainerIsolator`: Uses Cloudflare Containers API
-  - Planned: E2B, Firecracker, Docker isolators
+  - Planned: E2B, Docker isolators
 - Responsibilities:
-  - Execute code in isolated environment
-  - Provide FileSystem interface for the sandbox
+  - Execute shell commands in isolated environment
+  - Handle file upload/download
   - Handle cleanup/teardown
 
-**2. Runtime (language-specific execution)**
+**2. Mixins (capability extensions)**
 
-- Abstract base: `packages/core/src/runtimes/Runtime.ts`
-- Current implementation:
-  - `GenericRuntime`: Delegates directly to isolator (isolator handles language specifics)
-  - `NodeRuntime`: Legacy, not currently used
-- Design note: The Runtime layer is minimal because isolators handle language-specific execution (e.g., LocalIsolator builds commands for node/python/bash)
+- Location: `packages/core/src/mixins/`
+- `withFS.ts`: File system operations
+- `withNodeExecute.ts`: Node.js code execution
+- `withPythonExecute.ts`: Python code execution
 
 **3. Sandbox (orchestration)**
 
 - Location: `packages/core/src/Sandbox.ts`
 - Responsibilities:
-  - Create and wire Runtime + Isolator based on config
-  - Proxy filesystem operations to isolator's FileSystem
-  - Event emission (execute:start, execute:success, execute:error, execute:complete)
-  - Lifecycle management (destroy)
+  - Create isolator based on config
+  - Provide 4 core APIs (shell, upload, download, destroy)
+  - Base class for mixin composition
 
 ### Package Structure
 
@@ -116,20 +133,21 @@ The architecture follows a **Runtime + Isolator** pattern that separates "what t
 packages/
   core/           # Core implementation (@sandboxxjs/core)
     src/
-      Sandbox.ts           # Main orchestrator
-      types.ts             # Core type definitions
+      Sandbox.ts           # Base sandbox class
+      types.ts             # Type definitions
       errors.ts            # Custom error types
       isolators/           # Isolation implementations
         Isolator.ts        # Abstract base
         LocalIsolator.ts   # Child process isolation
         CloudflareContainerIsolator.ts
-      runtimes/            # Language runtime wrappers
-        Runtime.ts         # Abstract base
-        GenericRuntime.ts  # Default (delegates to isolator)
+      mixins/              # Capability extensions
+        withFS.ts          # File system mixin
+        withNodeExecute.ts # Node.js execute mixin
+        withPythonExecute.ts # Python execute mixin
 
   sandboxjs/      # Public API (sandboxjs npm package)
     src/
-      createSandbox.ts     # Factory function
+      createSandbox.ts     # Factory function (composes mixins)
       SandboxManager.ts    # Multi-sandbox manager
 
   cli/            # CLI tool (@sandboxxjs/cli)
@@ -140,51 +158,52 @@ services/
 
 ### Important Design Decisions
 
-1. **Isolators own filesystem**: Each isolator implements its own FileSystem interface. The Sandbox class proxies fs operations to the active isolator.
+1. **Base Sandbox is minimal**: Only 4 APIs (shell, upload, download, destroy)
 
-2. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}` for each execution. Always clean up with `sandbox.destroy()`.
+2. **Mixins add capabilities**: fs and execute are added via TypeScript mixins based on runtime config
 
-3. **Runtime configuration**: The `SandboxConfig` requires both `runtime` ("node" | "python" | "bash" | "docker") and `isolator` ("local" | "cloudflare" | "e2b" | "firecracker" | "docker"). These are independent choices.
+3. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
 
-4. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
+4. **Runtime determines mixins**:
+   - `runtime: "shell"` → BaseSandbox only
+   - `runtime: "node"` → BaseSandbox + withFS + withNodeExecute
+   - `runtime: "python"` → BaseSandbox + withFS + withPythonExecute
 
-5. **Event system**: Sandbox emits events at execution boundaries. Use `sandbox.on(event, handler)` to observe.
+5. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
 
 ## Key Types
 
 ```typescript
 interface SandboxConfig {
-  runtime: "bash" | "node" | "python" | "docker";
-  isolator: "local" | "cloudflare" | "e2b" | "firecracker" | "docker";
+  isolator: "local" | "cloudflare" | "e2b" | "docker";
+  runtime?: "shell" | "node" | "python"; // default: "shell"
   limits?: ResourceLimits;
-  isolation?: IsolationConfig;
+  node?: NodeConfig;
+  python?: PythonConfig;
 }
 
-interface ExecuteOptions {
-  code: string;
-  env?: Record<string, string>;
-  timeout?: number;
+interface ShellResult {
+  success: boolean;
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  executionTime: number;
 }
 
 interface ExecuteResult {
   success: boolean;
-  data?: unknown; // Return value (if runtime supports it)
-  stdout?: string;
-  stderr?: string;
-  error?: string;
-  exitCode?: number;
-  metadata: {
-    executionTime: number;
-    timestamp: string;
-  };
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  executionTime: number;
 }
 
 interface FileSystem {
-  write(path: string, data: string): Promise<void>;
   read(path: string): Promise<string>;
+  write(path: string, data: string): Promise<void>;
   list(path: string): Promise<string[]>;
-  delete(path: string): Promise<void>;
   exists(path: string): Promise<boolean>;
+  delete(path: string): Promise<void>;
 }
 ```
 
@@ -220,14 +239,23 @@ interface FileSystem {
 When implementing a new isolator:
 
 1. Create new class in `packages/core/src/isolators/` extending `Isolator`
-2. Implement `execute()`, `getFileSystem()`, and `destroy()` methods
-3. Add to switch statement in `Sandbox.createIsolator()` (in `Sandbox.ts`)
-4. FileSystem implementation should handle path resolution relative to isolation boundary
+2. Implement `shell()`, `upload()`, `download()`, and `destroy()` methods
+3. Add to switch statement in `BaseSandbox.createIsolator()` (in `Sandbox.ts`)
+4. Handle path resolution relative to isolation boundary
 5. Consider timeout handling, error mapping, and cleanup in destroy()
+
+## Adding New Mixins
+
+When implementing a new mixin:
+
+1. Create new file in `packages/core/src/mixins/`
+2. Export a function that takes a `SandboxConstructor` and returns an extended class
+3. Export from `packages/core/src/mixins/index.ts`
+4. Update `createSandbox.ts` to compose the mixin based on config
 
 ## Common Pitfalls
 
 - **Forgetting cleanup**: Always call `sandbox.destroy()` to clean up work directories and resources
-- **Path assumptions**: FileSystem paths in LocalIsolator are relative to `.sandbox/session-*`, not project root
-- **Timeout defaults**: Default timeout is 30s, configurable per-execution or per-sandbox
-- **Isolator vs Runtime confusion**: Runtime is mostly a pass-through to Isolator. Language-specific logic lives in the Isolator.
+- **Path assumptions**: File paths in LocalIsolator are relative to `.sandbox/session-*`, not project root
+- **Timeout defaults**: Default timeout is 30s, configurable via `limits.timeout`
+- **Mixin availability**: `execute()` and `fs` are only available for `runtime: "node"` or `runtime: "python"`, not for base shell sandbox

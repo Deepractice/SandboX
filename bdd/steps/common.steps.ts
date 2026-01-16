@@ -2,11 +2,11 @@
  * Shared step definitions
  */
 
-import { Given, setWorldConstructor } from "@cucumber/cucumber";
-import { createSandbox, type Sandbox, type ExecuteResult } from "sandboxxjs";
+import { Given, After, setWorldConstructor } from "@cucumber/cucumber";
+import { createSandbox, type NodeSandbox, type ExecuteResult } from "sandboxxjs";
 
 export class SandboxWorld {
-  sandbox?: Sandbox;
+  sandbox?: NodeSandbox;
   executeResult?: ExecuteResult;
   executeError?: Error;
   fileContent?: string;
@@ -16,10 +16,16 @@ setWorldConstructor(SandboxWorld);
 
 Given(
   "I create a sandbox with {string} runtime and {string} isolator",
-  function (this: SandboxWorld, runtime, isolator) {
+  function (this: SandboxWorld, runtime: string, isolator: string) {
     this.sandbox = createSandbox({
-      runtime: runtime as "bash" | "node" | "python" | "docker",
-      isolator: isolator as "local" | "e2b" | "firecracker" | "docker",
-    });
+      runtime: runtime as "shell" | "node" | "python",
+      isolator: isolator as "local" | "cloudflare" | "e2b" | "docker",
+    }) as NodeSandbox;
   }
 );
+
+After(async function (this: SandboxWorld) {
+  if (this.sandbox) {
+    await this.sandbox.destroy();
+  }
+});

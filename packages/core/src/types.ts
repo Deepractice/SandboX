@@ -2,53 +2,150 @@
  * Core type definitions for SandboX
  */
 
-export type Runtime = "bash" | "node" | "python" | "docker";
-export type IsolatorType = "local" | "cloudflare" | "e2b" | "firecracker" | "docker";
+// ============================================
+// Configuration Types
+// ============================================
+
+export type IsolatorType = "local" | "cloudflare" | "e2b" | "docker";
+export type Runtime = "shell" | "node" | "python";
 
 export interface SandboxConfig {
-  runtime: Runtime;
+  /** Isolator type */
   isolator: IsolatorType;
+
+  /** Runtime type (default: shell) */
+  runtime?: Runtime;
+
+  /** Resource limits */
   limits?: ResourceLimits;
-  isolation?: IsolationConfig;
+
+  /** Node-specific configuration */
+  node?: NodeConfig;
+
+  /** Python-specific configuration */
+  python?: PythonConfig;
 }
 
 export interface ResourceLimits {
-  timeout?: number; // milliseconds
-  memory?: number; // MB
-  cpu?: number; // percentage
-}
-
-export interface IsolationConfig {
-  networkAccess?: boolean;
-  fileSystemAccess?: boolean;
-  envVars?: Record<string, string>;
-}
-
-export interface ExecuteOptions {
-  code: string;
-  env?: Record<string, string>;
+  /** Timeout in milliseconds */
   timeout?: number;
+  /** Memory limit in bytes */
+  memory?: number;
+  /** CPU limit as percentage */
+  cpu?: number;
 }
 
-export interface ExecuteResult {
+export interface NodeConfig {
+  /** Package manager */
+  packageManager?: "npm" | "yarn" | "pnpm" | "bun";
+  /** Node version */
+  version?: string;
+}
+
+export interface PythonConfig {
+  /** Python version */
+  version?: string;
+  /** Whether to use virtual environment */
+  useVenv?: boolean;
+}
+
+// ============================================
+// Base Sandbox Interface
+// ============================================
+
+/**
+ * Base Sandbox interface - 4 core APIs
+ */
+export interface Sandbox {
+  /** Execute shell command */
+  shell(command: string): Promise<ShellResult>;
+
+  /** Upload file to sandbox */
+  upload(path: string, data: string | Buffer): Promise<void>;
+
+  /** Download file from sandbox */
+  download(path: string): Promise<string | Buffer>;
+
+  /** Destroy sandbox */
+  destroy(): Promise<void>;
+}
+
+/**
+ * Shell execution result
+ */
+export interface ShellResult {
+  /** Whether execution succeeded */
   success: boolean;
-  data?: unknown;
-  stdout?: string;
-  stderr?: string;
-  error?: string;
-  exitCode?: number;
-  metadata: {
-    executionTime: number;
-    timestamp: string;
-  };
+  /** Standard output */
+  stdout: string;
+  /** Standard error */
+  stderr: string;
+  /** Exit code */
+  exitCode: number;
+  /** Execution time in milliseconds */
+  executionTime: number;
+}
+
+// ============================================
+// Mixin Capability Interfaces
+// ============================================
+
+/**
+ * File system capability
+ */
+export interface WithFS {
+  fs: FileSystem;
 }
 
 export interface FileSystem {
-  write(path: string, data: string): Promise<void>;
   read(path: string): Promise<string>;
+  write(path: string, data: string): Promise<void>;
   list(path: string): Promise<string[]>;
-  delete(path: string): Promise<void>;
   exists(path: string): Promise<boolean>;
+  delete(path: string): Promise<void>;
 }
 
-export type EventHandler = (...args: unknown[]) => void;
+/**
+ * Code execution capability
+ */
+export interface WithExecute {
+  execute(code: string): Promise<ExecuteResult>;
+}
+
+export interface ExecuteResult {
+  /** Whether execution succeeded */
+  success: boolean;
+  /** Standard output */
+  stdout: string;
+  /** Standard error */
+  stderr: string;
+  /** Exit code */
+  exitCode: number;
+  /** Execution time in milliseconds */
+  executionTime: number;
+}
+
+// ============================================
+// Composed Types
+// ============================================
+
+/** Node sandbox = Base + FS + Execute */
+export type NodeSandbox = Sandbox & WithFS & WithExecute;
+
+/** Python sandbox = Base + FS + Execute */
+export type PythonSandbox = Sandbox & WithFS & WithExecute;
+
+/** Sandbox with FS */
+export type FSSandbox = Sandbox & WithFS;
+
+// ============================================
+// Mixin Constructor Types
+// ============================================
+
+/** Sandbox constructor type */
+export type SandboxConstructor<T extends Sandbox = Sandbox> = new (config: SandboxConfig) => T;
+
+/** Mixin function type */
+export type SandboxMixin<T extends Sandbox, U> = (
+  Base: SandboxConstructor<T>
+) => SandboxConstructor<T & U>;

@@ -83,6 +83,10 @@ export default [
       "no-console": "off",
       "no-unused-vars": "off",
       "no-undef": "error",
+      // Allow TypeScript mixin pattern
+      "constructor-super": "off",
+      // Allow TypeScript function overloads
+      "no-redeclare": "off",
     },
   },
 ];

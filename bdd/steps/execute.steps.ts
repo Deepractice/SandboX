@@ -6,9 +6,9 @@ import { When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "assert";
 import type { SandboxWorld } from "./common.steps.js";
 
-When("I execute code {string}", async function (this: SandboxWorld, code) {
+When("I execute code {string}", async function (this: SandboxWorld, code: string) {
   try {
-    this.executeResult = await this.sandbox!.execute({ code });
+    this.executeResult = await this.sandbox!.execute(code);
     this.executeError = undefined;
   } catch (error) {
     this.executeError = error as Error;
@@ -18,9 +18,19 @@ When("I execute code {string}", async function (this: SandboxWorld, code) {
 
 When(
   "I execute code {string} with timeout {int}",
-  async function (this: SandboxWorld, code, timeout) {
+  async function (this: SandboxWorld, code: string, timeout: number) {
     try {
-      this.executeResult = await this.sandbox!.execute({ code, timeout });
+      // Execute with timeout via shell
+      const result = await this.sandbox!.shell(
+        `timeout ${timeout / 1000} node -e '${code.replace(/'/g, "'\\''")}'`
+      );
+      this.executeResult = {
+        success: result.success,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode,
+        executionTime: result.executionTime,
+      };
       this.executeError = undefined;
     } catch (error) {
       this.executeError = error as Error;
@@ -31,12 +41,20 @@ When(
 
 When(
   "I execute code {string} with env {string}",
-  async function (this: SandboxWorld, code, envStr) {
+  async function (this: SandboxWorld, code: string, envStr: string) {
     const [key, value] = envStr.split("=");
-    const env = { [key]: value };
 
     try {
-      this.executeResult = await this.sandbox!.execute({ code, env });
+      // Execute with env via shell
+      const escapedCode = code.replace(/'/g, "'\\''");
+      const result = await this.sandbox!.shell(`${key}=${value} node -e '${escapedCode}'`);
+      this.executeResult = {
+        success: result.success,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode,
+        executionTime: result.executionTime,
+      };
       this.executeError = undefined;
     } catch (error) {
       this.executeError = error as Error;
@@ -56,11 +74,12 @@ Then("the execution should fail", function (this: SandboxWorld) {
 });
 
 Then("the execution should timeout", function (this: SandboxWorld) {
-  assert.ok(this.executeError, "Expected execution error");
-  assert.equal(this.executeError.name, "TimeoutError", "Expected timeout error");
+  // With timeout command, it returns exit code 124 on timeout
+  assert.ok(this.executeResult, "Expected execution result");
+  assert.equal(this.executeResult.exitCode, 124, "Expected timeout exit code");
 });
 
-Then("the stdout should contain {string}", function (this: SandboxWorld, expected) {
+Then("the stdout should contain {string}", function (this: SandboxWorld, expected: string) {
   assert.ok(this.executeResult, "Expected execution result");
   assert.ok(this.executeResult.stdout, "Expected stdout");
   assert.ok(
@@ -69,7 +88,7 @@ Then("the stdout should contain {string}", function (this: SandboxWorld, expecte
   );
 });
 
-Then("the stderr should contain {string}", function (this: SandboxWorld, expected) {
+Then("the stderr should contain {string}", function (this: SandboxWorld, expected: string) {
   assert.ok(this.executeResult, "Expected execution result");
   assert.ok(this.executeResult.stderr, "Expected stderr");
   assert.ok(

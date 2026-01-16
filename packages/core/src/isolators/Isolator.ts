@@ -2,10 +2,31 @@
  * Abstract Isolator base class
  */
 
-import type { ExecuteOptions, ExecuteResult, FileSystem } from "../types.js";
+import type { ShellResult } from "../types.js";
+
+export interface ShellOptions {
+  timeout?: number;
+  env?: Record<string, string>;
+}
 
 export abstract class Isolator {
-  abstract execute(options: ExecuteOptions): Promise<ExecuteResult>;
-  abstract getFileSystem(): FileSystem;
+  /**
+   * Execute shell command in isolated environment
+   */
+  abstract shell(command: string, options?: ShellOptions): Promise<ShellResult>;
+
+  /**
+   * Upload file to isolated environment
+   */
+  abstract upload(path: string, data: string | Buffer): Promise<void>;
+
+  /**
+   * Download file from isolated environment
+   */
+  abstract download(path: string): Promise<string | Buffer>;
+
+  /**
+   * Destroy isolator and cleanup resources
+   */
   abstract destroy(): Promise<void>;
 }

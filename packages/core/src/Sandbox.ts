@@ -1,47 +1,29 @@
 /**
- * Main Sandbox class
+ * Base Sandbox class - 4 core APIs
  */
 
-import type {
-  SandboxConfig,
-  ExecuteOptions,
-  ExecuteResult,
-  FileSystem,
-  EventHandler,
-} from "./types.js";
+import type { SandboxConfig, Sandbox as ISandbox, ShellResult } from "./types.js";
 import { Isolator } from "./isolators/Isolator.js";
 import { LocalIsolator } from "./isolators/LocalIsolator.js";
 import { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
-import { Runtime } from "./runtimes/Runtime.js";
-import { GenericRuntime } from "./runtimes/GenericRuntime.js";
 import { SandboxError } from "./errors.js";
 
-export class Sandbox {
-  private isolator: Isolator;
-  private runtime: Runtime;
-  private eventHandlers: Map<string, EventHandler[]> = new Map();
-  public fs: FileSystem;
+export class BaseSandbox implements ISandbox {
+  protected isolator: Isolator;
+  protected config: SandboxConfig;
 
   constructor(config: SandboxConfig) {
-    // Initialize isolator
-    this.isolator = this.createIsolator(config.isolator, config.runtime);
-    this.fs = this.isolator.getFileSystem();
-
-    // Initialize runtime
-    this.runtime = this.createRuntime(config.runtime, this.isolator);
+    this.config = config;
+    this.isolator = this.createIsolator(config.isolator);
   }
 
-  private createIsolator(
-    isolatorType: SandboxConfig["isolator"],
-    runtime: SandboxConfig["runtime"]
-  ): Isolator {
+  private createIsolator(isolatorType: SandboxConfig["isolator"]): Isolator {
     switch (isolatorType) {
       case "local":
-        return new LocalIsolator(runtime);
+        return new LocalIsolator();
       case "cloudflare":
-        return new CloudflareContainerIsolator(runtime);
+        return new CloudflareContainerIsolator();
       case "e2b":
-      case "firecracker":
       case "docker":
         throw new SandboxError(`Isolator "${isolatorType}" not yet implemented`);
       default:
@@ -49,53 +31,33 @@ export class Sandbox {
     }
   }
 
-  private createRuntime(_runtimeType: SandboxConfig["runtime"], isolator: Isolator): Runtime {
-    // Use GenericRuntime for all runtimes - isolator handles the specifics
-    return new GenericRuntime(isolator);
+  /**
+   * Execute shell command
+   */
+  async shell(command: string): Promise<ShellResult> {
+    return this.isolator.shell(command, {
+      timeout: this.config.limits?.timeout,
+    });
   }
 
-  async execute(options: ExecuteOptions): Promise<ExecuteResult> {
-    this.emit("execute:start", options);
-
-    try {
-      const result = await this.runtime.execute(options);
-      this.emit("execute:success", result);
-      return result;
-    } catch (error) {
-      this.emit("execute:error", error);
-      throw error;
-    } finally {
-      this.emit("execute:complete");
-    }
+  /**
+   * Upload file to sandbox
+   */
+  async upload(path: string, data: string | Buffer): Promise<void> {
+    return this.isolator.upload(path, data);
   }
 
-  async writeFile(filePath: string, data: string): Promise<void> {
-    return this.fs.write(filePath, data);
+  /**
+   * Download file from sandbox
+   */
+  async download(path: string): Promise<string | Buffer> {
+    return this.isolator.download(path);
   }
 
-  async readFile(filePath: string): Promise<string> {
-    return this.fs.read(filePath);
-  }
-
+  /**
+   * Destroy sandbox and cleanup resources
+   */
   async destroy(): Promise<void> {
-    await this.runtime.cleanup();
-    await this.isolator.destroy();
-    this.eventHandlers.clear();
-  }
-
-  on(event: string, handler: EventHandler): void {
-    if (!this.eventHandlers.has(event)) {
-      this.eventHandlers.set(event, []);
-    }
-    this.eventHandlers.get(event)!.push(handler);
-  }
-
-  private emit(event: string, ...args: unknown[]): void {
-    const handlers = this.eventHandlers.get(event);
-    if (handlers) {
-      for (const handler of handlers) {
-        handler(...args);
-      }
-    }
+    return this.isolator.destroy();
   }
 }

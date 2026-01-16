@@ -6,8 +6,8 @@
 import { spawn, type ChildProcess } from "child_process";
 import { createServer } from "net";
 import { createRequire } from "module";
-import { Isolator } from "./Isolator.js";
-import type { ExecuteOptions, ExecuteResult, FileSystem } from "../types.js";
+import { Isolator, type ShellOptions } from "./Isolator.js";
+import type { ShellResult } from "../types.js";
 import { ExecutionError, FileSystemError } from "../errors.js";
 
 const require = createRequire(import.meta.url);
@@ -16,11 +16,9 @@ export class CloudflareContainerIsolator extends Isolator {
   private serverProcess?: ChildProcess;
   private serverUrl?: string;
   private isReady = false;
-  private runtime: string;
 
-  constructor(runtime: string = "node") {
+  constructor() {
     super();
-    this.runtime = runtime;
   }
 
   /**
@@ -30,7 +28,7 @@ export class CloudflareContainerIsolator extends Isolator {
     return new Promise((resolve, reject) => {
       const server = createServer();
       server.listen(0, () => {
-        const port = (server.address() as any).port;
+        const port = (server.address() as { port: number }).port;
         server.close(() => resolve(port));
       });
       server.on("error", reject);
@@ -89,7 +87,6 @@ export class CloudflareContainerIsolator extends Isolator {
     // Log output for debugging (optional)
     this.serverProcess.stdout?.on("data", (_data) => {
       // Silently consume or log if needed
-      // console.log(`[server] ${data.toString().trim()}`);
     });
 
     this.serverProcess.stderr?.on("data", (data) => {
@@ -101,20 +98,26 @@ export class CloudflareContainerIsolator extends Isolator {
     this.isReady = true;
   }
 
-  async execute(options: ExecuteOptions): Promise<ExecuteResult> {
+  /**
+   * Execute shell command
+   */
+  async shell(command: string, options: ShellOptions = {}): Promise<ShellResult> {
+    const { timeout = 30000, env = {} } = options;
+    const startTime = Date.now();
+
     // Ensure server is running
     await this.ensureServerRunning();
 
     try {
-      // Call server to execute code
+      // Call server to execute shell command
       const response = await fetch(`${this.serverUrl}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: options.code,
-          runtime: this.runtime,
-          env: options.env || {},
-          timeout: options.timeout || 30000,
+          code: command,
+          runtime: "bash",
+          env,
+          timeout,
         }),
       });
 
@@ -123,34 +126,42 @@ export class CloudflareContainerIsolator extends Isolator {
         throw new ExecutionError(`Server execution failed: ${error}`);
       }
 
-      const result = await response.json();
-      return result as ExecuteResult;
+      const result = (await response.json()) as {
+        success: boolean;
+        stdout?: string;
+        stderr?: string;
+        exitCode?: number;
+      };
+
+      return {
+        success: result.success,
+        stdout: result.stdout || "",
+        stderr: result.stderr || "",
+        exitCode: result.exitCode ?? (result.success ? 0 : 1),
+        executionTime: Date.now() - startTime,
+      };
     } catch (error) {
-      throw new ExecutionError(`Execution failed: ${(error as Error).message}`);
+      throw new ExecutionError(`Shell execution failed: ${(error as Error).message}`);
     }
   }
 
-  getFileSystem(): FileSystem {
-    // File system operations not yet implemented
-    return {
-      write: async () => {
-        throw new FileSystemError("Filesystem not yet implemented for CloudflareContainerIsolator");
-      },
-      read: async () => {
-        throw new FileSystemError("Filesystem not yet implemented for CloudflareContainerIsolator");
-      },
-      list: async () => {
-        throw new FileSystemError("Filesystem not yet implemented for CloudflareContainerIsolator");
-      },
-      delete: async () => {
-        throw new FileSystemError("Filesystem not yet implemented for CloudflareContainerIsolator");
-      },
-      exists: async () => {
-        throw new FileSystemError("Filesystem not yet implemented for CloudflareContainerIsolator");
-      },
-    };
+  /**
+   * Upload file to sandbox
+   */
+  async upload(_path: string, _data: string | Buffer): Promise<void> {
+    throw new FileSystemError("Upload not yet implemented for CloudflareContainerIsolator");
   }
 
+  /**
+   * Download file from sandbox
+   */
+  async download(_path: string): Promise<string | Buffer> {
+    throw new FileSystemError("Download not yet implemented for CloudflareContainerIsolator");
+  }
+
+  /**
+   * Destroy isolator and cleanup
+   */
   async destroy(): Promise<void> {
     if (this.serverProcess) {
       this.serverProcess.kill();
