@@ -92,7 +92,6 @@ describe("StateStore (memory)", () => {
       await store.saveBlob(blobRef, blobData);
 
       // Save log with reference
-      const log = buildStateLog();
       // Note: assets.upload will be added to opRegistry later
       const logData = JSON.stringify([
         { op: "assets.upload", args: { remotePath: "/app/image.png", ref: blobRef } },
