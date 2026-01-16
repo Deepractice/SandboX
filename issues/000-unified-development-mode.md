@@ -111,6 +111,24 @@
 
 ## Phase 2: BDD 模式
 
+### BDD vs Unit 测试边界
+
+| 测试类型 | 测试层级       | 视角       |
+| -------- | -------------- | ---------- |
+| **BDD**  | 最外层 API/APP | 用户视角   |
+| **Unit** | 内部模块       | 开发者视角 |
+
+**BDD 测试原则**：
+
+- 只通过最外层公开 API 测试，不测试内部模块
+- 测试用户可见的行为，不测试实现细节
+- 这样做有助于从用户视角审视 API 设计
+
+**Unit 测试原则**：
+
+- 测试内部模块的具体实现
+- 可以 mock 依赖，关注边界条件
+
 ### Feature 文件结构
 
 ```gherkin
@@ -134,19 +152,14 @@ Feature: 功能名称
 ```
 bdd/
 ├── features/
-│   ├── queue/
-│   │   ├── subscribe.feature      # 订阅功能
-│   │   ├── ack.feature            # ACK 功能
-│   │   └── reconnect.feature      # 断线重连
-│   ├── agentx/
-│   │   ├── local-mode.feature     # 本地模式
-│   │   └── remote-mode.feature    # 远程模式
+│   ├── resolve.feature
+│   ├── deposit.feature
 │   └── ...
 ├── steps/
-│   ├── queue.steps.ts
-│   ├── agentx.steps.ts
-│   └── ...
-└── world.ts                        # 共享上下文
+│   ├── resolve.steps.ts
+│   ├── deposit.steps.ts
+│   └── common.steps.ts
+└── cucumber.js                     # Cucumber 配置
 ```
 
 ### 编写原则
@@ -159,27 +172,16 @@ bdd/
 ### 示例
 
 ```gherkin
-@queue @subscribe
-Feature: Queue 订阅
-  客户端可以订阅 topic，接收实时消息，断线后能恢复。
+@resolve
+Feature: Resolve Resource
+  通过 ARP URL 解析资源
 
-  Background:
-    Given Queue 服务已启动
-    And 客户端已连接
-
-  Scenario: 客户端订阅 topic 后收到新消息
-    Given topic "session-123" 存在
-    When 客户端订阅 "session-123"
-    And 服务端发送消息 "hello" 到 "session-123"
-    Then 客户端应该收到消息 "hello"
-
-  Scenario: 客户端断线重连后恢复消息
-    Given 客户端订阅了 "session-123"
-    And 客户端消费到 cursor "c-100"
-    When 客户端断开连接
-    And 服务端发送消息 "missed" 到 "session-123"
-    And 客户端重新连接
-    Then 客户端应该收到消息 "missed"
+  Scenario: 解析本地文本资源
+    Given ARP URL "arp:text:file://./data/hello.txt"
+    When resolve the resource
+    Then should return resource object
+    And type should be "text"
+    And content should contain "Hello"
 ```
 
 ---
@@ -190,16 +192,16 @@ Feature: Queue 订阅
 
 ```bash
 # 1. 运行测试（预期失败）
-bun bdd --tags @queue
+cd bdd && bun run test:tags "@feature-tag"
 
 # 2. 实现代码
 # ... 编写实现 ...
 
 # 3. 运行测试（通过）
-bun bdd --tags @queue
+cd bdd && bun run test:tags "@feature-tag"
 
 # 4. 运行全部测试确保没有破坏其他功能
-bun test
+bun run test
 ```
 
 ### 原则
@@ -210,15 +212,170 @@ bun test
 
 ---
 
+---
+
+## 完整开发流程
+
+### Step 0: Issue 创建
+
+```bash
+# 创建 issue 文档（如果还没有）
+# issues/xxx-feature-name.md
+```
+
+**内容**：
+
+- 背景和痛点
+- 期望用法
+- 设计方案
+- 实现步骤
+
+### Step 1: 创建分支
+
+```bash
+git checkout main
+git pull
+git checkout -b feat/feature-name
+```
+
+### Step 2: Phase 1 - 需求澄清（Code Review）
+
+1. Reviewer（Claude）阅读相关代码/文档/issue
+2. 发现问题，提出疑问（使用问题格式）
+3. Architect（用户）解答，做决策
+4. 确认方案，进入 Phase 2
+
+### Step 3: Phase 2 - 行为定义（BDD）
+
+```bash
+# 1. 编写 feature 文件
+# bdd/features/feature-name.feature
+
+# 2. 运行测试（预期失败，step 未定义）
+cd bdd && bun run test:tags "@feature-tag"
+
+# 3. 实现 step definitions（如需要）
+# bdd/steps/feature-name.steps.ts
+```
+
+### Step 4: Phase 3 - 实现（TDD）
+
+```bash
+# 1. 运行测试（预期失败）
+cd bdd && bun run test:tags "@feature-tag"
+
+# 2. 实现代码
+# packages/core/src/...
+
+# 3. 运行测试直到通过
+cd bdd && bun run test:tags "@feature-tag"
+
+# 4. 运行全部测试确保没破坏其他功能
+bun run test
+bun run test:bdd
+```
+
+### Step 5: 代码质量检查
+
+```bash
+# TypeCheck
+bun run typecheck
+
+# Lint
+bun run lint
+
+# Format
+bun run format
+```
+
+### Step 6: 更新文档
+
+需要更新的文档：
+
+- `README.md` - 如果有新功能/API
+- `README.zh-CN.md` - 中文版
+- `CLAUDE.md` - 如果架构变化
+- `packages/*/README.md` - 相关包的文档
+- `issues/xxx.md` - 更新 issue 状态
+
+### Step 7: 写 Changeset
+
+```bash
+# 手动创建 changeset
+# .changeset/feature-name.md
+
+---
+"packageName": patch|minor|major
+---
+
+Description of changes
+```
+
+**版本规则**：
+
+- `patch` - Bug 修复和内部改进
+- `minor` - 新功能和增强
+- `major` - Breaking changes
+
+### Step 8: 提交代码
+
+```bash
+git add .
+git status  # 检查要提交的文件
+git commit -m "feat: feature description
+
+Co-Authored-By: Claude Sonnet 4.5 (1M context) <noreply@anthropic.com>"
+```
+
+**Commit 规范**：
+
+- 遵循 Conventional Commits
+- `feat:` / `fix:` / `docs:` / `refactor:` / `test:` / `chore:`
+
+### Step 9: 推送和创建 PR
+
+```bash
+# 推送分支
+git push -u origin feat/feature-name
+
+# 创建 PR
+gh pr create --title "feat: feature description" --body "..."
+```
+
+**PR 检查**：
+
+- ✅ CI 通过（lint, typecheck, test, build）
+- ✅ Changeset 存在（自动检查）
+
+### Step 10: 合并
+
+```bash
+# PR approved 后合并
+gh pr merge --squash
+
+# 切回 main 并更新
+git checkout main
+git pull
+
+# 删除本地分支
+git branch -d feat/feature-name
+```
+
+---
+
 ## 快速参考
 
-### 开发新功能
+### 开发新功能（完整版）
 
 ```
-1. Code Review: 讨论需求，确定方案
-2. BDD: 写 .feature 文件
-3. 实现: 让测试通过
-4. 提交
+1. Issue 创建 → 拉分支
+2. Code Review: 讨论需求，确定方案
+3. BDD: 写 .feature 文件
+4. 实现: 让测试通过
+5. 质量检查: typecheck, lint, format
+6. 更新文档
+7. 写 changeset
+8. 提交 → PR → 合并
 ```
 
 ### 修复 Bug
@@ -245,19 +402,18 @@ bun test
 
 ```bash
 # 运行所有 BDD 测试
-bun bdd
+bun run test:bdd
 
 # 运行指定 tag 的测试
-bun bdd --tags @queue
-bun bdd --tags "@queue and @subscribe"
-bun bdd --tags "not @pending"
+cd bdd && bun run test:tags "@resolve"
+cd bdd && bun run test:tags "@resolve and @e2e"
+cd bdd && bun run test:tags "not @pending"
 
 # 运行单元测试
-bun test
-bun --filter @agentxjs/queue test
+bun run test
 
 # 类型检查
-bun typecheck
+bun run typecheck
 ```
 
 ---
@@ -276,8 +432,6 @@ bun typecheck
 
 ## 相关文件
 
-- `bdd/` - BDD 测试目录
-- `bdd/cucumber.js` - Cucumber 配置
 - `bdd/features/` - Feature 文件
 - `bdd/steps/` - Step 实现
-- `bdd/world.ts` - 共享上下文
+- `bdd/cucumber.js` - Cucumber 配置
