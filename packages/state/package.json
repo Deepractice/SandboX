@@ -1,6 +1,6 @@
 {
   "name": "@sandboxxjs/state",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "SandboX State - State management layer with StateLog",
   "keywords": [
     "sandbox",
