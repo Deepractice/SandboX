@@ -154,7 +154,7 @@ Then(
 
     const filePath = path.join(
       os.homedir(),
-      ".deepractice/sandbox/state-logs",
+      ".agentvm/sandbox/state-logs",
       `${this.sandboxId}.jsonl`
     );
     const content = await fs.readFile(filePath, "utf-8");

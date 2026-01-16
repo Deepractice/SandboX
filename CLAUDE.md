@@ -137,7 +137,7 @@ interface WithState {
 - `StateStorage.ts`: Key-value storage (in-memory)
 - `StateLog.ts`: Operation recording (binlog pattern)
 - `StateStore.ts`: Persistence with AOF pattern (JSON Lines format)
-  - ResourceX implementation: Persists to `~/.deepractice/sandbox/state-logs/{id}.jsonl`
+  - ResourceX implementation: Persists to `~/.agentvm/sandbox/state-logs/{id}.jsonl`
   - Memory implementation: For testing
 - `StateAssets.ts`: Binary file upload/download
 - `opRegistry.ts`: Unified op definitions for replay/record
@@ -211,7 +211,7 @@ services/
 4. **Mixins add capabilities**: State and execute are added via TypeScript mixins based on runtime config
 
 5. **Auto-persist by default**: When `enableRecord: true`, operations are automatically persisted to disk using AOF (Append-Only File) pattern with JSON Lines format
-   - Default: `store: "resourcex"` → persists to `~/.deepractice/sandbox/state-logs/{id}.jsonl`
+   - Default: `store: "resourcex"` → persists to `~/.agentvm/sandbox/state-logs/{id}.jsonl`
    - Testing: `store: "memory"` → in-memory only
 
 6. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
@@ -300,7 +300,7 @@ State can be persisted via ResourceX using the `deepractice://` transport:
 ```typescript
 import { createStateStore, buildStateLog, loadStateLog } from "@sandboxxjs/state";
 
-// Create store (persists to ~/.deepractice/sandbox/)
+// Create store (persists to ~/.agentvm/sandbox/)
 const store = createStateStore({ type: "resourcex" });
 
 // Save StateLog
@@ -313,10 +313,10 @@ const log = loadStateLog(json);
 createSandbox({ state: { initializeLog: log } });
 ```
 
-**Storage location:** `~/.deepractice/sandbox/`
+**Storage location:** `~/.agentvm/sandbox/`
 
-- State Logs: `~/.deepractice/sandbox/state-logs/{key}.json`
-- Blobs: `~/.deepractice/sandbox/blobs/{ref}`
+- State Logs: `~/.agentvm/sandbox/state-logs/{key}.json`
+- Blobs: `~/.agentvm/sandbox/blobs/{ref}`
 
 ## Testing Strategy
 
