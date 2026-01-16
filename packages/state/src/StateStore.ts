@@ -2,7 +2,7 @@
  * StateStore - Persistence for StateLog and Blobs
  */
 
-import { createResourceX, deepracticeHandler, type ResourceX } from "resourcexjs";
+import { createResourceX, agentvmHandler, type ResourceX } from "resourcexjs";
 import type { StateLogEntry } from "./types.js";
 
 export interface StateStore {
@@ -78,7 +78,7 @@ class MemoryStateStore implements StateStore {
 
 /**
  * ResourceX implementation for production
- * Uses deepractice:// transport → ~/.deepractice/sandbox/
+ * Uses agentvm:// transport → ~/.agentvm/sandbox/
  */
 class ResourceXStateStore implements StateStore {
   private rx: ResourceX;
@@ -86,16 +86,16 @@ class ResourceXStateStore implements StateStore {
 
   constructor() {
     this.rx = createResourceX({
-      transports: [deepracticeHandler()],
+      transports: [agentvmHandler()],
     });
     // Get base path from home directory
     const os = require("os");
     const path = require("path");
-    this.basePath = path.join(os.homedir(), ".deepractice/sandbox");
+    this.basePath = path.join(os.homedir(), ".agentvm/sandbox");
   }
 
   private logUrl(key: string): string {
-    return `@text:deepractice://sandbox/state-logs/${key}.json`;
+    return `@text:agentvm://sandbox/state-logs/${key}.json`;
   }
 
   private logPath(sandboxId: string): string {
@@ -104,7 +104,7 @@ class ResourceXStateStore implements StateStore {
   }
 
   private blobUrl(ref: string): string {
-    return `@binary:deepractice://sandbox/blobs/${ref}`;
+    return `@binary:agentvm://sandbox/blobs/${ref}`;
   }
 
   async saveLog(key: string, data: string): Promise<void> {

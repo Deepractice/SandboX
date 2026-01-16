@@ -36,7 +36,7 @@ Feature: State Persistence
     Given I create a sandbox with enableRecord true
     When I write "data" to file "test.txt"
     And I set environment variable "KEY" to "value"
-    Then the StateLog file should exist at "~/.deepractice/sandbox/state-logs/{id}.jsonl"
+    Then the StateLog file should exist at "~/.agentvm/sandbox/state-logs/{id}.jsonl"
     And the file should contain 2 lines
 
   @persistence @memory

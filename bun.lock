@@ -39,7 +39,7 @@
     },
     "packages/cli": {
       "name": "@sandboxxjs/cli",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "bin": {
         "sandbox": "./dist/index.js",
       },
@@ -49,7 +49,7 @@
     },
     "packages/core": {
       "name": "@sandboxxjs/core",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "dependencies": {
         "@sandboxxjs/cloudflare-isolator": "workspace:*",
         "@sandboxxjs/state": "workspace:*",
@@ -59,21 +59,21 @@
     },
     "packages/sandboxxjs": {
       "name": "sandboxxjs",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "dependencies": {
         "@sandboxxjs/core": "workspace:*",
       },
     },
     "packages/state": {
       "name": "@sandboxxjs/state",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "resourcexjs": "0.4.0",
+        "resourcexjs": "0.5.0",
       },
     },
     "services/cloudflare-isolator": {
       "name": "@sandboxxjs/cloudflare-isolator",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "bin": {
         "cloudflare-isolator": "./dist/cli.js",
       },
@@ -423,7 +423,7 @@
 
     "@poppinss/exception": ["@poppinss/exception@1.2.3", "", {}, "sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw=="],
 
-    "@resourcexjs/core": ["@resourcexjs/core@0.4.0", "", {}, "sha512-McD0YF8Zs9uhdnJBQsezNVhFECT7MHtGEFXqIsFTdbXQvMlUW4Ep4io0GWH/DfixLYoSDf8PEZmlKJF9u4lmEg=="],
+    "@resourcexjs/core": ["@resourcexjs/core@0.5.0", "", {}, "sha512-M3oUkRybg+CU46fx/9r6gnAcOvCRTEOdD7dmxnQ8/S5R0Qy3KgorrOC42SlYRP9lGMVix0xF0U3MdfJBRjpo7Q=="],
 
     "@sandboxxjs/bdd": ["@sandboxxjs/bdd@workspace:bdd"],
 
@@ -947,7 +947,7 @@
 
     "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
 
-    "resourcexjs": ["resourcexjs@0.4.0", "", { "dependencies": { "@resourcexjs/core": "^0.4.0" } }, "sha512-G1izVX2SxaC9jM8+IcgUXX8lWQScAjY+9EVWp21oN1fD/Y2rExePetRrQDR2ULhqd4GLJJRpRFArMusjBvwHeA=="],
+    "resourcexjs": ["resourcexjs@0.5.0", "", { "dependencies": { "@resourcexjs/core": "^0.5.0" } }, "sha512-OwsGF0nkuwjhDGh6rjYQQYnZT2GlRLNSChJJ/bHoGaqurwBfa0JXl3L9unzGMVn1mhhxVhIyUlqTEhFozt2/2w=="],
 
     "reusify": ["reusify@1.1.0", "", {}, "sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw=="],
 

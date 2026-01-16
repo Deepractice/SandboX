@@ -202,7 +202,7 @@ const sandbox = createSandbox({
 console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi"
 
 // Operations are automatically appended to:
-// ~/.deepractice/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
+// ~/.agentvm/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
 await sandbox.fs.write("config.json", "{}");
 sandbox.env.set("KEY", "value");
 
@@ -222,7 +222,7 @@ const newSandbox = createSandbox({
 **Storage:**
 
 - Format: JSON Lines (`.jsonl`) for true append-only operations
-- Location: `~/.deepractice/sandbox/state-logs/{sandbox-id}.jsonl`
+- Location: `~/.agentvm/sandbox/state-logs/{sandbox-id}.jsonl`
 - Testing: Use `store: "memory"` to disable file persistence
 
 ## How it Works
@@ -291,7 +291,7 @@ const cloudflare = createSandbox({ isolator: "cloudflare", runtime: "node" }); /
 | **env**        | Environment variables   | StateLog          |
 | **storage**    | Key-value storage       | StateLog          |
 | **StateLog**   | Operation recording     | JSON serializable |
-| **StateStore** | Persistence backend     | ~/.deepractice/   |
+| **StateStore** | Persistence backend     | ~/.agentvm/       |
 
 ## Configuration
 
