@@ -131,7 +131,6 @@ Then(
   async function (this: PersistenceWorld, pathPattern: string) {
     assert.ok(this.sandboxId, "Sandbox ID should exist");
     const os = await import("os");
-    const path = await import("path");
     const fs = await import("fs/promises");
 
     // Replace {id} with actual sandbox ID and expand home directory
