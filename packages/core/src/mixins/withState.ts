@@ -32,7 +32,7 @@ export function withState<T extends Sandbox>(
 
       // Create state instances (with optional recording)
       const state = createState({
-        sandbox: this,
+        sandbox: this as unknown as Sandbox,
         env: stateConfig?.env,
         enableRecord: stateConfig?.enableRecord,
       });
@@ -44,7 +44,7 @@ export function withState<T extends Sandbox>(
 
       // Replay initializeLog if provided
       if (stateConfig?.initializeLog) {
-        replayStateLog(stateConfig.initializeLog, this);
+        replayStateLog(stateConfig.initializeLog, this as unknown as WithState);
       }
     }
 
@@ -54,5 +54,5 @@ export function withState<T extends Sandbox>(
     getStateLog(): StateLog | undefined {
       return this.stateLog;
     }
-  } as SandboxConstructor<T & WithState>;
+  } as unknown as SandboxConstructor<T & WithState>;
 }

@@ -48,5 +48,5 @@ export function withPythonExecute<T extends Sandbox>(
         executionTime: result.executionTime,
       };
     }
-  } as SandboxConstructor<T & WithExecute>;
+  } as unknown as SandboxConstructor<T & WithExecute>;
 }
