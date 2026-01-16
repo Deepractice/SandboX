@@ -11,10 +11,20 @@ export { Isolator } from "./isolators/Isolator.js";
 export { LocalIsolator } from "./isolators/LocalIsolator.js";
 export { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
 
-// State implementations
-export { StateFS } from "./state/StateFS.js";
-export { StateEnv } from "./state/StateEnv.js";
-export { StateStorage } from "./state/StateStorage.js";
+// Re-export from @sandboxxjs/state
+export {
+  StateFS,
+  StateEnv,
+  StateStorage,
+  StateLog,
+  type StateLogEntry,
+  type FileSystem,
+  type Environment,
+  type Storage,
+  type WithState,
+  StateError,
+  FileSystemError,
+} from "@sandboxxjs/state";
 
 // Mixins
 export { withState } from "./mixins/withState.js";

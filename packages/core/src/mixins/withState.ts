@@ -2,18 +2,16 @@
  * State mixin - adds state capabilities (fs, env, storage)
  */
 
-import type {
-  Sandbox,
-  SandboxConfig,
-  SandboxConstructor,
-  WithState,
-  FileSystem,
-  Environment,
-  Storage,
-} from "../types.js";
-import { StateFS } from "../state/StateFS.js";
-import { StateEnv } from "../state/StateEnv.js";
-import { StateStorage } from "../state/StateStorage.js";
+import type { Sandbox, SandboxConfig, SandboxConstructor } from "../types.js";
+import {
+  StateFS,
+  StateEnv,
+  StateStorage,
+  type FileSystem,
+  type Environment,
+  type Storage,
+  type WithState,
+} from "@sandboxxjs/state";
 
 /**
  * Add state capabilities to sandbox

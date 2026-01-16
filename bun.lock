@@ -49,6 +49,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@sandboxxjs/cloudflare-isolator": "workspace:*",
+        "@sandboxxjs/state": "workspace:*",
         "execa": "^9.6.1",
       },
     },
@@ -58,6 +59,10 @@
       "dependencies": {
         "@sandboxxjs/core": "workspace:*",
       },
+    },
+    "packages/state": {
+      "name": "@sandboxxjs/state",
+      "version": "0.0.1",
     },
     "services/cloudflare-isolator": {
       "name": "@sandboxxjs/cloudflare-isolator",
@@ -418,6 +423,8 @@
     "@sandboxxjs/cloudflare-isolator": ["@sandboxxjs/cloudflare-isolator@workspace:services/cloudflare-isolator"],
 
     "@sandboxxjs/core": ["@sandboxxjs/core@workspace:packages/core"],
+
+    "@sandboxxjs/state": ["@sandboxxjs/state@workspace:packages/state"],
 
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
 

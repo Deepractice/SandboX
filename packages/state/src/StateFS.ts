@@ -3,8 +3,8 @@
  * Operates on sandbox via shell commands
  */
 
-import type { FileSystem, Sandbox } from "../types.js";
-import { FileSystemError } from "../errors.js";
+import type { FileSystem, Sandbox } from "./types.js";
+import { FileSystemError } from "./errors.js";
 
 export class StateFS implements FileSystem {
   constructor(private sandbox: Sandbox) {}

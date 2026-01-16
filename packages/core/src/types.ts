@@ -2,6 +2,8 @@
  * Core type definitions for SandboX
  */
 
+import type { WithState } from "@sandboxxjs/state";
+
 // ============================================
 // Configuration Types
 // ============================================
@@ -84,55 +86,8 @@ export interface ShellResult {
 }
 
 // ============================================
-// State Layer Interfaces
-// ============================================
-
-/**
- * File system operations
- */
-export interface FileSystem {
-  read(path: string): Promise<string>;
-  write(path: string, data: string): Promise<void>;
-  list(path: string): Promise<string[]>;
-  exists(path: string): Promise<boolean>;
-  delete(path: string): Promise<void>;
-}
-
-/**
- * Environment variables
- */
-export interface Environment {
-  get(key: string): string | undefined;
-  set(key: string, value: string): void;
-  has(key: string): boolean;
-  delete(key: string): void;
-  keys(): string[];
-  all(): Record<string, string>;
-}
-
-/**
- * Key-value storage
- */
-export interface Storage {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-  removeItem(key: string): void;
-  clear(): void;
-  keys(): string[];
-}
-
-// ============================================
 // Mixin Capability Interfaces
 // ============================================
-
-/**
- * State capability (fs + env + storage)
- */
-export interface WithState {
-  fs: FileSystem;
-  env: Environment;
-  storage: Storage;
-}
 
 /**
  * Code execution capability

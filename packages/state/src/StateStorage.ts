@@ -3,7 +3,7 @@
  * In-memory storage (can be swapped for Redis/File backend later)
  */
 
-import type { Storage } from "../types.js";
+import type { Storage } from "./types.js";
 
 export class StateStorage implements Storage {
   private data: Map<string, string>;

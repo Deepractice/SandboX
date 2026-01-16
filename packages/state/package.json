@@ -1,17 +1,17 @@
 {
-  "name": "@sandboxxjs/core",
-  "version": "0.1.0",
-  "description": "SandboX Core - Secure code execution engine",
+  "name": "@sandboxxjs/state",
+  "version": "0.0.1",
+  "description": "SandboX State - State management layer with StateLog",
   "keywords": [
     "sandbox",
-    "execution",
-    "security",
-    "isolation"
+    "state",
+    "statelog",
+    "persistence"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Deepractice/SandboX.git",
-    "directory": "packages/core"
+    "directory": "packages/state"
   },
   "license": "MIT",
   "engines": {
@@ -41,9 +41,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "execa": "^9.6.1",
-    "@sandboxxjs/cloudflare-isolator": "workspace:*",
-    "@sandboxxjs/state": "workspace:*"
-  }
+  "dependencies": {}
 }

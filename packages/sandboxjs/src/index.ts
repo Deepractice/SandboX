@@ -14,6 +14,8 @@ export {
   StateFS,
   StateEnv,
   StateStorage,
+  StateLog,
+  type StateLogEntry,
   // Mixins
   withState,
   withNodeExecute,
@@ -42,4 +44,5 @@ export {
   TimeoutError,
   IsolationError,
   FileSystemError,
+  StateError,
 } from "@sandboxxjs/core";

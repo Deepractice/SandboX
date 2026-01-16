@@ -3,7 +3,7 @@
  * In-memory storage with controlled access
  */
 
-import type { Environment } from "../types.js";
+import type { Environment } from "./types.js";
 
 export class StateEnv implements Environment {
   private vars: Map<string, string>;
