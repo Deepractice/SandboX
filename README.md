@@ -35,13 +35,11 @@ AI Agents need to execute code, but running untrusted code is dangerous. Differe
 // Development: fast iteration, low isolation
 const result = child_process.execSync("node script.js");
 
-// Production: need microVM isolation
-const vm = await e2b.create();
-const result = await vm.run("node script.js");
+// Container: stronger isolation (local Docker)
+const container = await dockerClient.run("node script.js");
 
-// Edge: need container isolation
-const container = await cloudflare.createContainer();
-const result = await container.exec("node script.js");
+// Edge: deploy to edge network
+const result = await cloudflare.containers.run("node script.js");
 ```
 
 **SandboX solves this with a unified API**: one interface for all isolators, switch without changing code.
@@ -50,9 +48,8 @@ const result = await container.exec("node script.js");
 import { createSandbox } from "sandboxxjs";
 
 // Same code, different isolators
-const sandbox = createSandbox({ isolator: "local", runtime: "node" }); // Dev
-const sandbox = createSandbox({ isolator: "e2b", runtime: "node" }); // Prod
-const sandbox = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Edge
+const sandbox = createSandbox({ isolator: "local", runtime: "node" }); // Fast dev
+const sandbox = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Container (local or edge)
 
 // Execute code
 const result = await sandbox.execute("console.log('Hello')");
@@ -242,25 +239,31 @@ createSandbox({ isolator, runtime, state? })
                     ▼
     ┌───────────────────────────────┐
     │        Isolator Layer         │
-    ├───────┬───────┬───────┬───────┤
-    │ Local │  E2B  │ Cloud │Docker │
-    │       │(microVM)│flare │       │
-    └───────┴───────┴───────┴───────┘
+    ├───────────────┬───────────────┤
+    │     Local     │  Cloudflare   │
+    │   (process)   │  (container)  │
+    └───────────────┴───────────────┘
 ```
 
 ### Isolators
 
-| Isolator       | Isolation Level | Startup Time | Best For        |
-| -------------- | --------------- | ------------ | --------------- |
-| **local**      | Process         | ~10ms        | Development     |
-| **e2b**        | MicroVM         | ~150ms       | Production      |
-| **cloudflare** | Container       | ~100ms       | Edge deployment |
-| **docker**     | Container       | ~500ms       | Custom images   |
+| Isolator       | Status | Isolation Level | Startup Time | Requirements   | Best For             |
+| -------------- | ------ | --------------- | ------------ | -------------- | -------------------- |
+| **local**      | ✅     | Process         | ~10ms        | None           | Development          |
+| **cloudflare** | ✅     | Container       | ~100ms       | Docker (local) | Local + Edge deploy  |
+| **e2b**        | 🚧     | MicroVM         | ~150ms       | E2B account    | Production (Planned) |
+| **docker**     | 🚧     | Container       | ~500ms       | Docker         | Custom (Planned)     |
+
+**Cloudflare Isolator:**
+
+- Can run **locally** using Docker containers (same API as cloud deployment)
+- Can deploy to **Cloudflare Workers** for edge execution
+- Requires Docker daemon when running locally
 
 ```typescript
 // Switch isolator without changing code
 const dev = createSandbox({ isolator: "local", runtime: "node" });
-const prod = createSandbox({ isolator: "e2b", runtime: "node" });
+const cloudflare = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Needs Docker
 // Same API: execute(), fs, env, storage
 ```
 
