@@ -350,7 +350,7 @@ interface SandboxConfig {
 
 | Package                                 | Description         |
 | --------------------------------------- | ------------------- |
-| [`sandboxxjs`](./packages/sandboxjs)    | Main API            |
+| [`sandboxxjs`](./packages/sandboxxjs)   | Main API            |
 | [`@sandboxxjs/core`](./packages/core)   | Core implementation |
 | [`@sandboxxjs/state`](./packages/state) | State management    |
 | [`@sandboxxjs/cli`](./packages/cli)     | CLI tool            |

@@ -36,7 +36,7 @@ bun run test:bdd        # Run BDD/Cucumber tests from bdd/ directory
 
 ```bash
 # Navigate to specific package first
-cd packages/core        # or packages/sandboxjs, packages/cli, services/cloudflare-isolator
+cd packages/core        # or packages/sandboxxjs, packages/cli, services/cloudflare-isolator
 bun run build          # Build just this package
 bun run test           # Test just this package
 bun run typecheck      # Type check just this package
