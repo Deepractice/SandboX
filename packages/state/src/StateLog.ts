@@ -57,6 +57,15 @@ class StateLog {
   };
 
   /**
+   * Record a raw entry (used by recording proxy)
+   * @internal
+   */
+  recordEntry(op: string, args: Record<string, unknown>): StateLog {
+    this.entries.push({ op, args });
+    return this;
+  }
+
+  /**
    * Get all entries
    */
   getEntries(): StateLogEntry[] {

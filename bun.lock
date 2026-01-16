@@ -63,6 +63,9 @@
     "packages/state": {
       "name": "@sandboxxjs/state",
       "version": "0.0.1",
+      "dependencies": {
+        "resourcexjs": "0.4.0",
+      },
     },
     "services/cloudflare-isolator": {
       "name": "@sandboxxjs/cloudflare-isolator",
@@ -415,6 +418,8 @@
     "@poppinss/dumper": ["@poppinss/dumper@0.6.5", "", { "dependencies": { "@poppinss/colors": "^4.1.5", "@sindresorhus/is": "^7.0.2", "supports-color": "^10.0.0" } }, "sha512-NBdYIb90J7LfOI32dOewKI1r7wnkiH6m920puQ3qHUeZkxNkQiFnXVWoE6YtFSv6QOiPPf7ys6i+HWWecDz7sw=="],
 
     "@poppinss/exception": ["@poppinss/exception@1.2.3", "", {}, "sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw=="],
+
+    "@resourcexjs/core": ["@resourcexjs/core@0.4.0", "", {}, "sha512-McD0YF8Zs9uhdnJBQsezNVhFECT7MHtGEFXqIsFTdbXQvMlUW4Ep4io0GWH/DfixLYoSDf8PEZmlKJF9u4lmEg=="],
 
     "@sandboxxjs/bdd": ["@sandboxxjs/bdd@workspace:bdd"],
 
@@ -935,6 +940,8 @@
     "resolve-from": ["resolve-from@5.0.0", "", {}, "sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw=="],
 
     "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
+
+    "resourcexjs": ["resourcexjs@0.4.0", "", { "dependencies": { "@resourcexjs/core": "^0.4.0" } }, "sha512-G1izVX2SxaC9jM8+IcgUXX8lWQScAjY+9EVWp21oN1fD/Y2rExePetRrQDR2ULhqd4GLJJRpRFArMusjBvwHeA=="],
 
     "reusify": ["reusify@1.1.0", "", {}, "sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw=="],
 
