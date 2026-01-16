@@ -1,5 +1,5 @@
 /**
- * Base Sandbox class - 2 core APIs (shell, destroy)
+ * Base Sandbox class - 4 core APIs (shell, upload, download, destroy)
  */
 
 import type { SandboxConfig, Sandbox as ISandbox, ShellResult } from "./types.js";
@@ -38,6 +38,20 @@ export class BaseSandbox implements ISandbox {
     return this.isolator.shell(command, {
       timeout: this.config.limits?.timeout,
     });
+  }
+
+  /**
+   * Upload file to sandbox
+   */
+  async upload(data: Buffer, remotePath: string): Promise<void> {
+    return this.isolator.upload(data, remotePath);
+  }
+
+  /**
+   * Download file from sandbox
+   */
+  async download(remotePath: string): Promise<Buffer> {
+    return this.isolator.download(remotePath);
   }
 
   /**

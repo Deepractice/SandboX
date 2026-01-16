@@ -70,11 +70,17 @@ export interface PythonConfig {
 // ============================================
 
 /**
- * Base Sandbox interface - 2 core APIs
+ * Base Sandbox interface - 4 core APIs
  */
 export interface Sandbox {
   /** Execute shell command */
   shell(command: string): Promise<ShellResult>;
+
+  /** Upload file to sandbox */
+  upload(data: Buffer, remotePath: string): Promise<void>;
+
+  /** Download file from sandbox */
+  download(remotePath: string): Promise<Buffer>;
 
   /** Destroy sandbox */
   destroy(): Promise<void>;

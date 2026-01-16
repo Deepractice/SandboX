@@ -56,9 +56,9 @@ export class LocalIsolator extends Isolator {
   /**
    * Upload file to sandbox
    */
-  async upload(filePath: string, data: string | Buffer): Promise<void> {
+  async upload(data: Buffer, remotePath: string): Promise<void> {
     try {
-      const fullPath = path.join(this.workDir, filePath);
+      const fullPath = path.join(this.workDir, remotePath);
       await fs.mkdir(path.dirname(fullPath), { recursive: true });
       await fs.writeFile(fullPath, data);
     } catch (error) {
@@ -69,9 +69,9 @@ export class LocalIsolator extends Isolator {
   /**
    * Download file from sandbox
    */
-  async download(filePath: string): Promise<string | Buffer> {
+  async download(remotePath: string): Promise<Buffer> {
     try {
-      const fullPath = path.join(this.workDir, filePath);
+      const fullPath = path.join(this.workDir, remotePath);
       return await fs.readFile(fullPath);
     } catch (error) {
       throw new FileSystemError(`Failed to download file: ${(error as Error).message}`);

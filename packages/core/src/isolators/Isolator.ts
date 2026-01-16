@@ -18,12 +18,12 @@ export abstract class Isolator {
   /**
    * Upload file to isolated environment
    */
-  abstract upload(path: string, data: string | Buffer): Promise<void>;
+  abstract upload(data: Buffer, remotePath: string): Promise<void>;
 
   /**
    * Download file from isolated environment
    */
-  abstract download(path: string): Promise<string | Buffer>;
+  abstract download(remotePath: string): Promise<Buffer>;
 
   /**
    * Destroy isolator and cleanup resources

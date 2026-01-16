@@ -148,14 +148,14 @@ export class CloudflareContainerIsolator extends Isolator {
   /**
    * Upload file to sandbox
    */
-  async upload(_path: string, _data: string | Buffer): Promise<void> {
+  async upload(_data: Buffer, _remotePath: string): Promise<void> {
     throw new FileSystemError("Upload not yet implemented for CloudflareContainerIsolator");
   }
 
   /**
    * Download file from sandbox
    */
-  async download(_path: string): Promise<string | Buffer> {
+  async download(_remotePath: string): Promise<Buffer> {
     throw new FileSystemError("Download not yet implemented for CloudflareContainerIsolator");
   }
 
