@@ -29,3 +29,31 @@ Feature: Code Execution
     When I execute code "console.log(process.env.TEST_VAR)" with env "TEST_VAR=hello"
     Then the execution should succeed
     And the stdout should contain "hello"
+
+  @execute @python
+  Scenario: Execute simple Python code
+    Given I create a sandbox with "python" runtime and "local" isolator
+    When I execute code "print('Hello from Python')"
+    Then the execution should succeed
+    And the stdout should contain "Hello from Python"
+
+  @execute @python
+  Scenario: Execute Python with imports
+    Given I create a sandbox with "python" runtime and "local" isolator
+    When I execute code "import sys; print(sys.version)"
+    Then the execution should succeed
+    And the stdout should contain "."
+
+  @execute @shell
+  Scenario: Execute shell command
+    Given I create a sandbox with "shell" runtime and "local" isolator
+    When I run shell command "echo 'Hello from Shell'"
+    Then the execution should succeed
+    And the stdout should contain "Hello from Shell"
+
+  @execute @shell
+  Scenario: Execute shell command with pipes
+    Given I create a sandbox with "shell" runtime and "local" isolator
+    When I run shell command "echo 'test' | wc -l"
+    Then the execution should succeed
+    And the stdout should contain "1"

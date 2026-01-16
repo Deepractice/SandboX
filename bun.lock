@@ -26,6 +26,9 @@
     "bdd": {
       "name": "@sandboxxjs/bdd",
       "version": "0.1.0",
+      "dependencies": {
+        "@sandboxxjs/state": "^0.0.1",
+      },
       "devDependencies": {
         "@cucumber/cucumber": "^11.2.0",
         "@types/node": "^24.9.2",

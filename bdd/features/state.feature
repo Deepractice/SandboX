@@ -28,6 +28,12 @@ Feature: State Management
     Given I create a sandbox with "node" runtime and "local" isolator and env "INIT_VAR=init_value"
     Then environment variable "INIT_VAR" should be "init_value"
 
+  @env
+  Scenario: Get all environment variables
+    When I set environment variable "KEY1" to "value1"
+    And I set environment variable "KEY2" to "value2"
+    Then all environment variables should include "KEY1" and "KEY2"
+
   @storage
   Scenario: Set and get storage item
     When I set storage item "count" to "42"

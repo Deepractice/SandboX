@@ -38,6 +38,15 @@ Then("environment variable {string} should not exist", function (this: SandboxWo
   assert.ok(!exists, `Expected env "${key}" to not exist`);
 });
 
+Then(
+  "all environment variables should include {string} and {string}",
+  function (this: SandboxWorld, key1: string, key2: string) {
+    const all = this.sandbox!.env.all();
+    assert.ok(key1 in all, `Expected env.all() to include "${key1}"`);
+    assert.ok(key2 in all, `Expected env.all() to include "${key2}"`);
+  }
+);
+
 // Storage steps
 
 When(

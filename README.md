@@ -187,20 +187,25 @@ sandbox.env.get("NODE_ENV"); // "production"
 
 ### State Persistence
 
-Persist and restore sandbox state via ResourceX:
+Export and restore sandbox state for sharing or backup:
 
 ```typescript
-import { createStateStore, loadStateLog } from "@sandboxxjs/state";
+import { loadStateLog } from "sandboxxjs";
 
-// Create store (persists to ~/.deepractice/sandbox/)
-const store = createStateStore({ type: "resourcex" });
+// Enable recording
+const sandbox = createSandbox({
+  isolator: "local",
+  runtime: "node",
+  state: { enableRecord: true },
+});
 
-// Save state
+// ... perform operations ...
+
+// Export state as JSON
 const log = sandbox.getStateLog();
-await store.saveLog("session-123", log.toJSON());
+const json = log.toJSON(); // Can save to file, database, etc.
 
-// Later: restore state
-const json = await store.loadLog("session-123");
+// Later: restore from JSON
 const restoredLog = loadStateLog(json);
 const newSandbox = createSandbox({
   isolator: "local",
@@ -208,6 +213,8 @@ const newSandbox = createSandbox({
   state: { initializeLog: restoredLog },
 });
 ```
+
+**Storage:** State is automatically persisted to `~/.deepractice/sandbox/` when recording is enabled.
 
 ## How it Works
 

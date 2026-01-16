@@ -6,6 +6,16 @@ import { When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "assert";
 import type { SandboxWorld } from "./common.steps.js";
 
+When("I run shell command {string}", async function (this: SandboxWorld, command: string) {
+  try {
+    this.executeResult = await this.sandbox!.shell(command);
+    this.executeError = undefined;
+  } catch (error) {
+    this.executeError = error as Error;
+    this.executeResult = undefined;
+  }
+});
+
 When("I execute code {string}", async function (this: SandboxWorld, code: string) {
   try {
     this.executeResult = await this.sandbox!.execute(code);

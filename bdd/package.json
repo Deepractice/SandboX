@@ -14,5 +14,8 @@
     "@types/node": "^24.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@sandboxxjs/state": "^0.0.1"
   }
 }
