@@ -152,11 +152,7 @@ Then(
     const path = await import("path");
     const fs = await import("fs/promises");
 
-    const filePath = path.join(
-      os.homedir(),
-      ".agentvm/sandbox/state-logs",
-      `${this.sandboxId}.jsonl`
-    );
+    const filePath = path.join(os.homedir(), ".agentvm/sandbox", this.sandboxId, "state.jsonl");
     const content = await fs.readFile(filePath, "utf-8");
     const lines = content
       .trim()
@@ -188,11 +184,7 @@ Then("no file should be created on disk", async function (this: PersistenceWorld
   const path = await import("path");
   const fs = await import("fs/promises");
 
-  const filePath = path.join(
-    os.homedir(),
-    ".deepractice/sandbox/state-logs",
-    `${this.sandboxId}.jsonl`
-  );
+  const filePath = path.join(os.homedir(), ".agentvm/sandbox", this.sandboxId, "state.jsonl");
   const exists = await fs
     .access(filePath)
     .then(() => true)
