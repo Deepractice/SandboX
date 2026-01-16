@@ -14,7 +14,9 @@ export {
   StateFS,
   StateEnv,
   StateStorage,
-  StateLog,
+  buildStateLog,
+  loadStateLog,
+  type StateLog,
   type StateLogEntry,
   // Mixins
   withState,
@@ -23,6 +25,7 @@ export {
   // Types
   type Sandbox,
   type SandboxConfig,
+  type StateConfig,
   type Runtime,
   type IsolatorType,
   type ShellResult,

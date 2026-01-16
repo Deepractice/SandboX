@@ -52,10 +52,38 @@ export interface Storage {
 }
 
 /**
+ * StateLog type (opaque - use buildStateLog to create)
+ */
+export type StateLog = {
+  fs: {
+    write(path: string, data: string): StateLog;
+    delete(path: string): StateLog;
+  };
+  env: {
+    set(key: string, value: string): StateLog;
+    delete(key: string): StateLog;
+  };
+  storage: {
+    set(key: string, value: string): StateLog;
+    delete(key: string): StateLog;
+    clear(): StateLog;
+  };
+  getEntries(): StateLogEntry[];
+  toJSON(): string;
+  compact(): StateLog;
+};
+
+export interface StateLogEntry {
+  op: string;
+  args: Record<string, unknown>;
+}
+
+/**
  * State capability (fs + env + storage)
  */
 export interface WithState {
   fs: FileSystem;
   env: Environment;
   storage: Storage;
+  getStateLog?(): StateLog;
 }

@@ -3,19 +3,19 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import { StateLog } from "../../src/StateLog.js";
+import { buildStateLog, loadStateLog } from "../../src/StateLog.js";
 
 describe("StateLog", () => {
   describe("constructor", () => {
     test("should create empty StateLog", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       expect(log.getEntries()).toEqual([]);
     });
   });
 
   describe("fs operations", () => {
     test("should record fs.write operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.fs.write("/app/config.json", '{"env":"prod"}');
 
       const entries = log.getEntries();
@@ -27,7 +27,7 @@ describe("StateLog", () => {
     });
 
     test("should record fs.delete operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.fs.delete("/tmp/cache");
 
       const entries = log.getEntries();
@@ -41,7 +41,7 @@ describe("StateLog", () => {
 
   describe("env operations", () => {
     test("should record env.set operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.env.set("NODE_ENV", "production");
 
       const entries = log.getEntries();
@@ -53,7 +53,7 @@ describe("StateLog", () => {
     });
 
     test("should record env.delete operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.env.delete("TEMP_VAR");
 
       const entries = log.getEntries();
@@ -67,7 +67,7 @@ describe("StateLog", () => {
 
   describe("storage operations", () => {
     test("should record storage.set operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.storage.set("version", "1.0.0");
 
       const entries = log.getEntries();
@@ -79,7 +79,7 @@ describe("StateLog", () => {
     });
 
     test("should record storage.delete operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.storage.delete("temp");
 
       const entries = log.getEntries();
@@ -91,7 +91,7 @@ describe("StateLog", () => {
     });
 
     test("should record storage.clear operation", () => {
-      const log = new StateLog();
+      const log = buildStateLog();
       log.storage.clear();
 
       const entries = log.getEntries();
@@ -105,8 +105,8 @@ describe("StateLog", () => {
 
   describe("chaining", () => {
     test("should support method chaining", () => {
-      const log = new StateLog().fs
-        .write("/app/config.json", "{}")
+      const log = buildStateLog()
+        .fs.write("/app/config.json", "{}")
         .env.set("NODE_ENV", "production")
         .storage.set("version", "1.0.0");
 
@@ -120,7 +120,7 @@ describe("StateLog", () => {
 
   describe("serialization", () => {
     test("should serialize to JSON", () => {
-      const log = new StateLog().fs.write("/a.txt", "hello").env.set("KEY", "value");
+      const log = buildStateLog().fs.write("/a.txt", "hello").env.set("KEY", "value");
 
       const json = log.toJSON();
       const parsed = JSON.parse(json);
@@ -136,7 +136,7 @@ describe("StateLog", () => {
         { op: "env.set", args: { key: "KEY", value: "value" } },
       ]);
 
-      const log = StateLog.fromJSON(json);
+      const log = loadStateLog(json);
       const entries = log.getEntries();
 
       expect(entries).toHaveLength(2);
@@ -147,8 +147,8 @@ describe("StateLog", () => {
 
   describe("compact", () => {
     test("should merge multiple writes to same path", () => {
-      const log = new StateLog().fs
-        .write("/a.txt", "v1")
+      const log = buildStateLog()
+        .fs.write("/a.txt", "v1")
         .fs.write("/a.txt", "v2")
         .fs.write("/a.txt", "v3");
 
@@ -163,7 +163,7 @@ describe("StateLog", () => {
     });
 
     test("should remove write if followed by delete", () => {
-      const log = new StateLog().fs.write("/a.txt", "hello").fs.delete("/a.txt");
+      const log = buildStateLog().fs.write("/a.txt", "hello").fs.delete("/a.txt");
 
       const compacted = log.compact();
       const entries = compacted.getEntries();
@@ -173,7 +173,7 @@ describe("StateLog", () => {
     });
 
     test("should merge multiple env.set to same key", () => {
-      const log = new StateLog().env.set("KEY", "v1").env.set("KEY", "v2").env.set("KEY", "v3");
+      const log = buildStateLog().env.set("KEY", "v1").env.set("KEY", "v2").env.set("KEY", "v3");
 
       const compacted = log.compact();
       const entries = compacted.getEntries();

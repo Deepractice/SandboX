@@ -2,7 +2,7 @@
  * Core type definitions for SandboX
  */
 
-import type { WithState } from "@sandboxxjs/state";
+import type { WithState, StateLog } from "@sandboxxjs/state";
 
 // ============================================
 // Configuration Types
@@ -10,6 +10,17 @@ import type { WithState } from "@sandboxxjs/state";
 
 export type IsolatorType = "local" | "cloudflare" | "e2b" | "docker";
 export type Runtime = "shell" | "node" | "python";
+
+export interface StateConfig {
+  /** Simple environment variable initialization */
+  env?: Record<string, string>;
+
+  /** Initialize state from StateLog */
+  initializeLog?: StateLog;
+
+  /** Enable state recording */
+  enableRecord?: boolean;
+}
 
 export interface SandboxConfig {
   /** Isolator type */
@@ -21,8 +32,8 @@ export interface SandboxConfig {
   /** Resource limits */
   limits?: ResourceLimits;
 
-  /** Initial environment variables */
-  env?: Record<string, string>;
+  /** State configuration */
+  state?: StateConfig;
 
   /** Node-specific configuration */
   node?: NodeConfig;

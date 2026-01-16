@@ -86,7 +86,9 @@ Given(
     this.sandbox = createSandbox({
       runtime: runtime as "shell" | "node" | "python",
       isolator: isolator as "local" | "cloudflare" | "e2b" | "docker",
-      env: { [key]: value },
+      state: {
+        env: { [key]: value },
+      },
     }) as NodeSandbox;
   }
 );

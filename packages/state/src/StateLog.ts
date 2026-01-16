@@ -7,7 +7,7 @@ export interface StateLogEntry {
   args: Record<string, unknown>;
 }
 
-export class StateLog {
+class StateLog {
   private entries: StateLogEntry[] = [];
 
   /**
@@ -71,7 +71,7 @@ export class StateLog {
   }
 
   /**
-   * Deserialize from JSON string
+   * Deserialize from JSON string (internal use)
    */
   static fromJSON(json: string): StateLog {
     const log = new StateLog();
@@ -80,10 +80,18 @@ export class StateLog {
   }
 
   /**
+   * Create from entries array (internal use)
+   */
+  static fromEntries(entries: StateLogEntry[]): StateLog {
+    const log = new StateLog();
+    log.entries = [...entries];
+    return log;
+  }
+
+  /**
    * Compact the log by merging redundant operations
    */
   compact(): StateLog {
-    const result = new StateLog();
     const fsState = new Map<string, StateLogEntry>();
     const envState = new Map<string, StateLogEntry>();
     const storageState = new Map<string, StateLogEntry>();
@@ -111,19 +119,34 @@ export class StateLog {
     }
 
     // Rebuild entries in order: fs, env, storage
+    const compactedEntries: StateLogEntry[] = [];
     for (const entry of fsState.values()) {
-      result.entries.push(entry);
+      compactedEntries.push(entry);
     }
     for (const entry of envState.values()) {
-      result.entries.push(entry);
+      compactedEntries.push(entry);
     }
     if (storageClear) {
-      result.entries.push(storageClear);
+      compactedEntries.push(storageClear);
     }
     for (const entry of storageState.values()) {
-      result.entries.push(entry);
+      compactedEntries.push(entry);
     }
 
-    return result;
+    return StateLog.fromEntries(compactedEntries);
   }
+}
+
+/**
+ * Build a new StateLog (functional API)
+ */
+export function buildStateLog(): StateLog {
+  return new StateLog();
+}
+
+/**
+ * Load StateLog from JSON string
+ */
+export function loadStateLog(json: string): StateLog {
+  return StateLog.fromJSON(json);
 }
