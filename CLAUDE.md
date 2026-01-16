@@ -126,12 +126,17 @@ interface WithState {
   - Execute shell commands in isolated environment
   - Handle cleanup/teardown
 
-**2. State (state layer)**
+**2. State (state layer - @sandboxxjs/state package)**
 
-- Location: `packages/core/src/state/`
+- Location: `packages/state/src/`
 - `StateFS.ts`: File system operations (via shell commands)
 - `StateEnv.ts`: Environment variables (in-memory)
 - `StateStorage.ts`: Key-value storage (in-memory)
+- `StateLog.ts`: Operation recording (binlog pattern)
+- `StateStore.ts`: Persistence via ResourceX (deepractice://)
+- `StateAssets.ts`: Binary file upload/download
+- `opRegistry.ts`: Unified op definitions for replay/record
+- `createState.ts`: Factory with Proxy-based recording
 
 **3. Mixins (capability extensions)**
 
@@ -161,14 +166,23 @@ packages/
         Isolator.ts        # Abstract base
         LocalIsolator.ts   # Child process isolation
         CloudflareContainerIsolator.ts
-      state/               # State layer implementations
-        StateFS.ts         # File system state
-        StateEnv.ts        # Environment state
-        StateStorage.ts    # KV storage state
       mixins/              # Capability extensions
         withState.ts       # State mixin (fs, env, storage)
         withNodeExecute.ts # Node.js execute mixin
         withPythonExecute.ts # Python execute mixin
+
+  state/          # State management (@sandboxxjs/state)
+    src/
+      StateFS.ts           # File system state
+      StateEnv.ts          # Environment state
+      StateStorage.ts      # KV storage state
+      StateLog.ts          # Operation recording
+      StateStore.ts        # Persistence (ResourceX)
+      StateAssets.ts       # Binary file handling
+      opRegistry.ts        # Unified op definitions
+      createState.ts       # Factory with Proxy recording
+      replayStateLog.ts    # Replay operations
+      types.ts             # Type definitions
 
   sandboxjs/      # Public API (sandboxjs npm package)
     src/
@@ -242,7 +256,49 @@ interface Storage {
   clear(): void;
   keys(): string[];
 }
+
+// Persistence (StateStore)
+interface StateStore {
+  saveLog(key: string, data: string): Promise<void>;
+  loadLog(key: string): Promise<string | null>;
+  deleteLog(key: string): Promise<void>;
+  saveBlob(ref: string, data: Buffer): Promise<void>;
+  loadBlob(ref: string): Promise<Buffer | null>;
+  deleteBlob(ref: string): Promise<void>;
+}
+
+// Binary files (StateAssets)
+interface StateAssets {
+  uploadBuffer(data: Buffer, remotePath: string): Promise<string>;
+  downloadBuffer(remotePath: string): Promise<Buffer>;
+  list(): string[];
+}
 ```
+
+## State Persistence
+
+State can be persisted via ResourceX using the `deepractice://` transport:
+
+```typescript
+import { createStateStore, buildStateLog, loadStateLog } from "@sandboxxjs/state";
+
+// Create store (persists to ~/.deepractice/sandbox/)
+const store = createStateStore({ type: "resourcex" });
+
+// Save StateLog
+const log = sandbox.getStateLog();
+await store.saveLog("session-123", log.toJSON());
+
+// Load and restore
+const json = await store.loadLog("session-123");
+const log = loadStateLog(json);
+createSandbox({ state: { initializeLog: log } });
+```
+
+**Storage location:** `~/.deepractice/sandbox/`
+
+- Logs: `~/.deepractice/sandbox/logs/{key}.json`
+- Blobs: `~/.deepractice/sandbox/blobs/{ref}`
 
 ## Testing Strategy
 
