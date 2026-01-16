@@ -13,7 +13,6 @@ import {
   type Storage,
   type WithState,
   type StateLog,
-  type StateLogEntry,
 } from "@sandboxxjs/state";
 
 /**
