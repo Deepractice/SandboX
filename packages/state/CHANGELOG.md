@@ -1,5 +1,27 @@
 # @sandboxxjs/state
 
+## 0.3.0
+
+### Minor Changes
+
+- ddc7413: feat: auto-persist state with AOF pattern
+  - Add unique ID to all sandbox instances (sandbox-{nanoid})
+  - Auto-persist operations to disk when enableRecord: true
+  - Use JSON Lines (.jsonl) format for true append-only operations
+  - Add memory store option for testing
+  - Storage location: ~/.agentvm/sandbox/{sandbox-id}/state.jsonl
+
+### Patch Changes
+
+- 0e05bb0: chore: upgrade resourcexjs to 0.5.0 and sync agentvm naming
+  - Upgrade resourcexjs dependency from 0.4.0 to 0.5.0
+  - Update `deepracticeHandler` → `agentvmHandler`
+  - Update storage paths: `~/.deepractice/` → `~/.agentvm/`
+  - Update protocol scheme: `deepractice://` → `agentvm://`
+  - Update all documentation and tests
+
+  This change aligns with ResourceX v0.5.0 renaming (PR #11) to reserve "deepractice" for future cloud platform transport.
+
 ## 0.2.0
 
 ### Minor Changes
