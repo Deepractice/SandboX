@@ -187,25 +187,30 @@ sandbox.env.get("NODE_ENV"); // "production"
 
 ### State Persistence
 
-Export and restore sandbox state for sharing or backup:
+State operations are automatically persisted using **AOF (Append-Only File)** pattern:
 
 ```typescript
 import { loadStateLog } from "sandboxxjs";
 
-// Enable recording
+// Enable recording (auto-persist)
 const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
-  state: { enableRecord: true },
+  state: { enableRecord: true }, // Auto-persists to disk
 });
 
-// ... perform operations ...
+console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi"
 
-// Export state as JSON
+// Operations are automatically appended to:
+// ~/.deepractice/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
+await sandbox.fs.write("config.json", "{}");
+sandbox.env.set("KEY", "value");
+
+// Export state as JSON (optional - already persisted)
 const log = sandbox.getStateLog();
-const json = log.toJSON(); // Can save to file, database, etc.
+const json = log.toJSON();
 
-// Later: restore from JSON
+// Restore from JSON
 const restoredLog = loadStateLog(json);
 const newSandbox = createSandbox({
   isolator: "local",
@@ -214,7 +219,11 @@ const newSandbox = createSandbox({
 });
 ```
 
-**Storage:** State is automatically persisted to `~/.deepractice/sandbox/` when recording is enabled.
+**Storage:**
+
+- Format: JSON Lines (`.jsonl`) for true append-only operations
+- Location: `~/.deepractice/sandbox/state-logs/{sandbox-id}.jsonl`
+- Testing: Use `store: "memory"` to disable file persistence
 
 ## How it Works
 
@@ -298,7 +307,8 @@ interface SandboxConfig {
   state?: {
     env?: Record<string, string>; // Initial env vars
     initializeLog?: StateLog; // Pre-configure from log
-    enableRecord?: boolean; // Enable operation recording
+    enableRecord?: boolean; // Enable recording (= auto-persist)
+    store?: "resourcex" | "memory"; // Storage backend (default: "resourcex")
   };
 
   // Resource limits

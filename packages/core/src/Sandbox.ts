@@ -2,6 +2,7 @@
  * Base Sandbox class - 4 core APIs (shell, upload, download, destroy)
  */
 
+import { nanoid } from "nanoid";
 import type { SandboxConfig, Sandbox as ISandbox, ShellResult } from "./types.js";
 import { Isolator } from "./isolators/Isolator.js";
 import { LocalIsolator } from "./isolators/LocalIsolator.js";
@@ -9,10 +10,12 @@ import { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsol
 import { SandboxError } from "./errors.js";
 
 export class BaseSandbox implements ISandbox {
+  public readonly id: string;
   protected isolator: Isolator;
   protected config: SandboxConfig;
 
   constructor(config: SandboxConfig) {
+    this.id = `sandbox-${nanoid()}`;
     this.config = config;
     this.isolator = this.createIsolator(config.isolator);
   }

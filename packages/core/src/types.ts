@@ -20,6 +20,9 @@ export interface StateConfig {
 
   /** Enable state recording */
   enableRecord?: boolean;
+
+  /** Store type (default: resourcex, test: memory) */
+  store?: "resourcex" | "memory";
 }
 
 export interface SandboxConfig {
@@ -70,9 +73,12 @@ export interface PythonConfig {
 // ============================================
 
 /**
- * Base Sandbox interface - 4 core APIs
+ * Base Sandbox interface - 4 core APIs + ID
  */
 export interface Sandbox {
+  /** Unique sandbox ID */
+  readonly id: string;
+
   /** Execute shell command */
   shell(command: string): Promise<ShellResult>;
 

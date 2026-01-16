@@ -8,6 +8,7 @@ import { StateEnv } from "./StateEnv.js";
 import { StateStorage } from "./StateStorage.js";
 import { buildStateLog } from "./StateLog.js";
 import { findOp, argsToEntry } from "./opRegistry.js";
+import { createStateStore } from "./StateStore.js";
 
 type StateNamespace = "fs" | "env" | "storage";
 
@@ -18,6 +19,10 @@ export interface CreateStateOptions {
   env?: Record<string, string>;
   /** Enable recording to StateLog */
   enableRecord?: boolean;
+  /** Store type (default: resourcex, test: memory) */
+  store?: "resourcex" | "memory";
+  /** Sandbox ID for persistence */
+  sandboxId: string;
 }
 
 export interface StateResult {
@@ -33,7 +38,8 @@ export interface StateResult {
 function createRecordingProxy<T extends object>(
   target: T,
   namespace: StateNamespace,
-  log: StateLog
+  log: StateLog,
+  onRecord?: (entry: { op: string; args: Record<string, unknown> }) => void
 ): T {
   return new Proxy(target, {
     get(obj, prop) {
@@ -58,6 +64,10 @@ function createRecordingProxy<T extends object>(
         const record = () => {
           const entryArgs = argsToEntry(op, args);
           (log as any).recordEntry(op, entryArgs);
+          // Call onRecord callback for persistence
+          if (onRecord) {
+            onRecord({ op, args: entryArgs });
+          }
         };
 
         if (result instanceof Promise) {
@@ -78,7 +88,7 @@ function createRecordingProxy<T extends object>(
  * Create state instances
  */
 export function createState(options: CreateStateOptions): StateResult {
-  const { sandbox, env, enableRecord } = options;
+  const { sandbox, env, enableRecord, store = "resourcex", sandboxId } = options;
 
   // Create base instances
   const baseFS = new StateFS(sandbox);
@@ -97,10 +107,21 @@ export function createState(options: CreateStateOptions): StateResult {
   // Recording enabled, wrap with Proxy
   const stateLog = buildStateLog();
 
+  // Create store for persistence
+  const stateStore = createStateStore({ type: store });
+
+  // onRecord callback for auto-persist
+  const onRecord = (entry: { op: string; args: Record<string, unknown> }) => {
+    // Async persist (don't block)
+    stateStore.appendEntry(sandboxId, entry).catch((err) => {
+      console.error(`[SandboX] Failed to persist entry:`, err);
+    });
+  };
+
   return {
-    fs: createRecordingProxy(baseFS, "fs", stateLog),
-    env: createRecordingProxy(baseEnv, "env", stateLog),
-    storage: createRecordingProxy(baseStorage, "storage", stateLog),
+    fs: createRecordingProxy(baseFS, "fs", stateLog, onRecord),
+    env: createRecordingProxy(baseEnv, "env", stateLog, onRecord),
+    storage: createRecordingProxy(baseStorage, "storage", stateLog, onRecord),
     stateLog,
   };
 }

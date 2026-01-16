@@ -35,6 +35,8 @@ export function withState<T extends Sandbox>(
         sandbox: this as unknown as Sandbox,
         env: stateConfig?.env,
         enableRecord: stateConfig?.enableRecord,
+        store: stateConfig?.store,
+        sandboxId: (this as any).id,
       });
 
       this.fs = state.fs;

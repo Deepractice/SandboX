@@ -67,7 +67,7 @@ The architecture follows a **Base Sandbox + State + Mixin** pattern:
          ▼                ▼                ▼
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
 │ BaseSandbox │  │ NodeSandbox │  │PythonSandbox│
-│ (2 APIs)    │  │ +withState  │  │ +withState  │
+│ id (unique) │  │ +withState  │  │ +withState  │
 │ shell       │  │ +withExecute│  │ +withExecute│
 │ destroy     │  │             │  │             │
 └─────────────┘  └─────────────┘  └─────────────┘
@@ -88,11 +88,14 @@ The architecture follows a **Base Sandbox + State + Mixin** pattern:
               └───────────────────────┘
 ```
 
-### Base Sandbox (2 Core APIs)
+### Base Sandbox (ID + Core APIs)
 
 ```typescript
 interface Sandbox {
+  readonly id: string; // Unique sandbox ID (sandbox-{nanoid})
   shell(command: string): Promise<ShellResult>;
+  upload(data: Buffer, remotePath: string): Promise<void>;
+  download(remotePath: string): Promise<Buffer>;
   destroy(): Promise<void>;
 }
 ```
@@ -133,10 +136,12 @@ interface WithState {
 - `StateEnv.ts`: Environment variables (in-memory)
 - `StateStorage.ts`: Key-value storage (in-memory)
 - `StateLog.ts`: Operation recording (binlog pattern)
-- `StateStore.ts`: Persistence via ResourceX (deepractice://)
+- `StateStore.ts`: Persistence with AOF pattern (JSON Lines format)
+  - ResourceX implementation: Persists to `~/.deepractice/sandbox/state-logs/{id}.jsonl`
+  - Memory implementation: For testing
 - `StateAssets.ts`: Binary file upload/download
 - `opRegistry.ts`: Unified op definitions for replay/record
-- `createState.ts`: Factory with Proxy-based recording
+- `createState.ts`: Factory with Proxy-based recording and auto-persist
 
 **3. Mixins (capability extensions)**
 
@@ -197,20 +202,26 @@ services/
 
 ### Important Design Decisions
 
-1. **Base Sandbox is minimal**: Only 2 APIs (shell, destroy)
+1. **Sandbox ID**: Every sandbox instance has a unique ID (`sandbox-{nanoid}`) generated automatically
 
-2. **State is separate layer**: fs, env, storage are part of State, not base Sandbox
+2. **Base Sandbox is minimal**: Core APIs (shell, upload, download, destroy) + unique ID
 
-3. **Mixins add capabilities**: State and execute are added via TypeScript mixins based on runtime config
+3. **State is separate layer**: fs, env, storage are part of State, not base Sandbox
 
-4. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
+4. **Mixins add capabilities**: State and execute are added via TypeScript mixins based on runtime config
 
-5. **Runtime determines mixins**:
+5. **Auto-persist by default**: When `enableRecord: true`, operations are automatically persisted to disk using AOF (Append-Only File) pattern with JSON Lines format
+   - Default: `store: "resourcex"` → persists to `~/.deepractice/sandbox/state-logs/{id}.jsonl`
+   - Testing: `store: "memory"` → in-memory only
+
+6. **Work directories**: LocalIsolator creates temp directories at `.sandbox/session-{timestamp}`. Always clean up with `sandbox.destroy()`.
+
+7. **Runtime determines mixins**:
    - `runtime: "shell"` → BaseSandbox only
    - `runtime: "node"` → BaseSandbox + withState + withNodeExecute
    - `runtime: "python"` → BaseSandbox + withState + withPythonExecute
 
-6. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
+8. **Error hierarchy**: All errors inherit from `SandboxError`. Specific types: `ExecutionError`, `TimeoutError`, `IsolationError`, `FileSystemError`.
 
 ## Key Types
 
@@ -218,10 +229,17 @@ services/
 interface SandboxConfig {
   isolator: "local" | "cloudflare" | "e2b" | "docker";
   runtime?: "shell" | "node" | "python"; // default: "shell"
-  env?: Record<string, string>; // initial environment variables
+  state?: StateConfig;
   limits?: ResourceLimits;
   node?: NodeConfig;
   python?: PythonConfig;
+}
+
+interface StateConfig {
+  env?: Record<string, string>; // initial environment variables
+  initializeLog?: StateLog; // restore from StateLog
+  enableRecord?: boolean; // enable recording (= auto-persist)
+  store?: "resourcex" | "memory"; // default: "resourcex"
 }
 
 interface ShellResult {
