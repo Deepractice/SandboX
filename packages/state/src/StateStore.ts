@@ -71,7 +71,7 @@ class ResourceXStateStore implements StateStore {
   }
 
   private logUrl(key: string): string {
-    return `@text:deepractice://sandbox/logs/${key}.json`;
+    return `@text:deepractice://sandbox/state-logs/${key}.json`;
   }
 
   private blobUrl(ref: string): string {

@@ -9,8 +9,8 @@ Feature: State Persistence
     When I write "config data" to file "config.txt"
     And I set environment variable "APP_ENV" to "production"
     And I set storage item "version" to "1.0.0"
-    And I save the StateLog to store with key "test-session"
-    And I create a new sandbox from stored StateLog "test-session"
+    And I save the StateLog to store with key "example-session"
+    And I create a new sandbox from stored StateLog "example-session"
     And I read file "config.txt"
     Then file "config.txt" should exist
     And the file content should be "config data"
@@ -18,9 +18,9 @@ Feature: State Persistence
     And storage item "version" should be "1.0.0"
 
   @persistence
-  Scenario: StateStore memory implementation
+  Scenario: StateStore persistence across instances
     Given I create a StateStore
     When I build a StateLog with file write and env set
-    And I save the log to store with key "persistent-session"
-    And I load the log from store with key "persistent-session"
+    And I save the log to store with key "example-persist"
+    And I load the log from store with key "example-persist"
     Then the loaded log should have 2 entries

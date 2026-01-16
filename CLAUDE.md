@@ -297,7 +297,7 @@ createSandbox({ state: { initializeLog: log } });
 
 **Storage location:** `~/.deepractice/sandbox/`
 
-- Logs: `~/.deepractice/sandbox/logs/{key}.json`
+- State Logs: `~/.deepractice/sandbox/state-logs/{key}.json`
 - Blobs: `~/.deepractice/sandbox/blobs/{ref}`
 
 ## Testing Strategy

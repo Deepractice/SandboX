@@ -23,12 +23,12 @@ interface PersistenceWorld extends SandboxWorld {
 
 // StateStore management
 Given("I create a StateStore", function (this: PersistenceWorld) {
-  this.store = createStateStore({ type: "memory" });
+  this.store = createStateStore({ type: "resourcex" });
 });
 
 When("I create a new StateStore instance", function (this: PersistenceWorld) {
-  // For memory store, create new instance (simulating restart)
-  this.store = createStateStore({ type: "memory" });
+  // For resourcex store, create new instance (simulating restart)
+  this.store = createStateStore({ type: "resourcex" });
 });
 
 // Save StateLog to store
