@@ -3,106 +3,305 @@
   <p>
     <strong>Multi-language secure execution sandbox for AI Agents</strong>
   </p>
-  <p>AI Agent multi-language secure execution sandbox</p>
+  <p>AI Agent 多语言安全执行沙箱</p>
 
   <p>
-    <b>Multi-Language</b> · <b>Multi-Isolator</b> · <b>Secure by Default</b>
+    <b>Multi-Language</b> · <b>Multi-Isolator</b> · <b>State Persistence</b>
+  </p>
+  <p>
+    <b>多语言支持</b> · <b>多隔离策略</b> · <b>状态持久化</b>
   </p>
 
   <p>
     <a href="https://github.com/Deepractice/SandboX"><img src="https://img.shields.io/github/stars/Deepractice/SandboX?style=social" alt="Stars"/></a>
+    <img src="https://visitor-badge.laobi.icu/badge?page_id=Deepractice.SandboX" alt="Views"/>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Deepractice/SandboX?color=blue" alt="License"/></a>
     <a href="https://www.npmjs.com/package/sandboxxjs"><img src="https://img.shields.io/npm/v/sandboxxjs?color=cb3837&logo=npm" alt="npm"/></a>
+  </p>
+
+  <p>
+    <a href="README.md"><strong>English</strong></a> |
+    <a href="README.zh-CN.md">简体中文</a>
   </p>
 </div>
 
 ---
 
-## What is SandboX?
+## Why SandboX?
 
-**SandboX** provides secure, isolated execution environments for running untrusted code from AI Agents.
+AI Agents need to execute code, but running untrusted code is dangerous. Different environments require different isolation strategies:
 
-- **Multi-Language**: Shell, Node.js, Python
-- **Multi-Isolator**: Local (child_process), Cloudflare, E2B (microVM), Docker
-- **Pluggable Architecture**: Switch isolators without changing code
-- **Mixin-based Extensions**: Compose capabilities as needed
+```typescript
+// Development: fast iteration, low isolation
+const result = child_process.execSync("node script.js");
 
-## Installation
+// Production: need microVM isolation
+const vm = await e2b.create();
+const result = await vm.run("node script.js");
 
-```bash
-npm install sandboxxjs
-# or
-bun add sandboxxjs
+// Edge: need container isolation
+const container = await cloudflare.createContainer();
+const result = await container.exec("node script.js");
 ```
 
-## Quick Start
-
-### Base Sandbox (2 Core APIs)
+**SandboX solves this with a unified API**: one interface for all isolators, switch without changing code.
 
 ```typescript
 import { createSandbox } from "sandboxxjs";
 
-// Create a base sandbox (shell only)
-const sandbox = createSandbox({ isolator: "local" });
+// Same code, different isolators
+const sandbox = createSandbox({ isolator: "local", runtime: "node" }); // Dev
+const sandbox = createSandbox({ isolator: "e2b", runtime: "node" }); // Prod
+const sandbox = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Edge
 
-// Execute shell commands
-const result = await sandbox.shell("echo 'Hello World'");
-console.log(result.stdout); // "Hello World"
+// Execute code
+const result = await sandbox.execute("console.log('Hello')");
+await sandbox.destroy();
+```
+
+## Quick Start
+
+```bash
+npm install sandboxxjs
+```
+
+```typescript
+import { createSandbox } from "sandboxxjs";
+
+const sandbox = createSandbox({
+  isolator: "local",
+  runtime: "node",
+});
+
+// Execute code
+const result = await sandbox.execute("1 + 1");
+console.log(result.output); // "2"
+
+// File system
+await sandbox.fs.write("config.json", '{"debug": true}');
+const content = await sandbox.fs.read("config.json");
+
+// Environment variables
+sandbox.env.set("API_KEY", "xxx");
+const key = sandbox.env.get("API_KEY");
+
+// Key-value storage
+sandbox.storage.setItem("lastRun", Date.now().toString());
 
 // Cleanup
 await sandbox.destroy();
 ```
 
-### Node.js Sandbox (with State)
+## Core Features
+
+### Multi-Language Execution
 
 ```typescript
-const sandbox = createSandbox({
-  isolator: "local",
-  runtime: "node",
-  env: { API_KEY: "xxx" }, // Initial environment variables
-});
+// Node.js
+const nodeSandbox = createSandbox({ isolator: "local", runtime: "node" });
+await nodeSandbox.execute("console.log(process.version)");
 
-// Execute Node.js code directly
-const result = await sandbox.execute("console.log('Hello from Node')");
+// Python
+const pythonSandbox = createSandbox({ isolator: "local", runtime: "python" });
+await pythonSandbox.execute("import sys; print(sys.version)");
+
+// Shell
+const shellSandbox = createSandbox({ isolator: "local" });
+await shellSandbox.shell("echo $SHELL");
+```
+
+### State Layer (fs, env, storage)
+
+```typescript
+const sandbox = createSandbox({ isolator: "local", runtime: "node" });
 
 // File system operations
 await sandbox.fs.write("/app/data.json", '{"key": "value"}');
 const content = await sandbox.fs.read("/app/data.json");
 const exists = await sandbox.fs.exists("/app/data.json");
 const files = await sandbox.fs.list("/app");
+await sandbox.fs.delete("/app/data.json");
 
 // Environment variables
-const apiKey = sandbox.env.get("API_KEY");
-sandbox.env.set("DEBUG", "true");
+sandbox.env.set("NODE_ENV", "production");
+sandbox.env.get("NODE_ENV"); // "production"
+sandbox.env.has("NODE_ENV"); // true
+sandbox.env.delete("NODE_ENV");
+sandbox.env.all(); // { ... }
 
 // Key-value storage
-sandbox.storage.setItem("lastRun", Date.now().toString());
-const lastRun = sandbox.storage.getItem("lastRun");
-
-await sandbox.destroy();
+sandbox.storage.setItem("token", "abc123");
+sandbox.storage.getItem("token"); // "abc123"
+sandbox.storage.removeItem("token");
+sandbox.storage.clear();
 ```
 
-### Python Sandbox
+### State Recording (Binlog Pattern)
+
+Record all state operations for replay and persistence:
 
 ```typescript
+// Enable recording
 const sandbox = createSandbox({
   isolator: "local",
-  runtime: "python",
+  runtime: "node",
+  state: { enableRecord: true },
 });
 
-// Execute Python code
-const result = await sandbox.execute("print('Hello from Python')");
+// Operations are recorded automatically
+await sandbox.fs.write("config.json", "{}");
+sandbox.env.set("DEBUG", "true");
+sandbox.storage.setItem("version", "1.0.0");
 
-// File operations
-await sandbox.fs.write("/data/input.csv", csvData);
-await sandbox.execute(`
-import pandas as pd
-df = pd.read_csv('/data/input.csv')
-df.to_csv('/data/output.csv')
-`);
-const output = await sandbox.fs.read("/data/output.csv");
+// Get recorded operations
+const log = sandbox.getStateLog();
+console.log(log.toJSON());
+// [
+//   { op: "fs.write", args: { path: "config.json", data: "{}" } },
+//   { op: "env.set", args: { key: "DEBUG", value: "true" } },
+//   { op: "storage.set", args: { key: "version", value: "1.0.0" } }
+// ]
+```
 
-await sandbox.destroy();
+### State Initialization (Replay)
+
+Pre-configure sandbox from a StateLog:
+
+```typescript
+import { buildStateLog, createSandbox } from "sandboxxjs";
+
+// Build initialization log
+const initLog = buildStateLog()
+  .fs.write("config.json", '{"env": "prod"}')
+  .env.set("NODE_ENV", "production")
+  .storage.set("initialized", "true");
+
+// Create sandbox with pre-configured state
+const sandbox = createSandbox({
+  isolator: "local",
+  runtime: "node",
+  state: { initializeLog: initLog },
+});
+
+// State is already set up
+const config = await sandbox.fs.read("config.json"); // '{"env": "prod"}'
+sandbox.env.get("NODE_ENV"); // "production"
+```
+
+### State Persistence
+
+Persist and restore sandbox state via ResourceX:
+
+```typescript
+import { createStateStore, loadStateLog } from "@sandboxxjs/state";
+
+// Create store (persists to ~/.deepractice/sandbox/)
+const store = createStateStore({ type: "resourcex" });
+
+// Save state
+const log = sandbox.getStateLog();
+await store.saveLog("session-123", log.toJSON());
+
+// Later: restore state
+const json = await store.loadLog("session-123");
+const restoredLog = loadStateLog(json);
+const newSandbox = createSandbox({
+  isolator: "local",
+  runtime: "node",
+  state: { initializeLog: restoredLog },
+});
+```
+
+## How it Works
+
+### Architecture
+
+```
+createSandbox({ isolator, runtime, state? })
+                    │
+    ┌───────────────┼───────────────┐
+    │               │               │
+    ▼               ▼               ▼
+┌────────┐    ┌──────────┐    ┌────────────┐
+│ Shell  │    │  Node.js │    │   Python   │
+│Sandbox │    │  Sandbox │    │  Sandbox   │
+└────────┘    └──────────┘    └────────────┘
+    │               │               │
+    │         ┌─────┴─────┐         │
+    │         │   State   │         │
+    │         │  Layer    │         │
+    │         ├───────────┤         │
+    │         │ fs        │         │
+    │         │ env       │         │
+    │         │ storage   │         │
+    │         │ (record)  │         │
+    │         └─────┬─────┘         │
+    │               │               │
+    └───────────────┼───────────────┘
+                    │
+                    ▼
+    ┌───────────────────────────────┐
+    │        Isolator Layer         │
+    ├───────┬───────┬───────┬───────┤
+    │ Local │  E2B  │ Cloud │Docker │
+    │       │(microVM)│flare │       │
+    └───────┴───────┴───────┴───────┘
+```
+
+### Isolators
+
+| Isolator       | Isolation Level | Startup Time | Best For        |
+| -------------- | --------------- | ------------ | --------------- |
+| **local**      | Process         | ~10ms        | Development     |
+| **e2b**        | MicroVM         | ~150ms       | Production      |
+| **cloudflare** | Container       | ~100ms       | Edge deployment |
+| **docker**     | Container       | ~500ms       | Custom images   |
+
+```typescript
+// Switch isolator without changing code
+const dev = createSandbox({ isolator: "local", runtime: "node" });
+const prod = createSandbox({ isolator: "e2b", runtime: "node" });
+// Same API: execute(), fs, env, storage
+```
+
+### State Layer
+
+| Component      | Description             | Persistence       |
+| -------------- | ----------------------- | ----------------- |
+| **fs**         | File system (via shell) | StateLog + Store  |
+| **env**        | Environment variables   | StateLog          |
+| **storage**    | Key-value storage       | StateLog          |
+| **StateLog**   | Operation recording     | JSON serializable |
+| **StateStore** | Persistence backend     | ~/.deepractice/   |
+
+## Configuration
+
+```typescript
+interface SandboxConfig {
+  // Isolator (required)
+  isolator: "local" | "cloudflare" | "e2b" | "docker";
+
+  // Runtime (default: "shell")
+  runtime?: "shell" | "node" | "python";
+
+  // State configuration
+  state?: {
+    env?: Record<string, string>; // Initial env vars
+    initializeLog?: StateLog; // Pre-configure from log
+    enableRecord?: boolean; // Enable operation recording
+  };
+
+  // Resource limits
+  limits?: {
+    timeout?: number; // ms (default: 30000)
+    memory?: number; // bytes
+    cpu?: number; // percentage
+  };
+
+  // Runtime-specific
+  node?: { packageManager?: "npm" | "yarn" | "pnpm" | "bun" };
+  python?: { version?: string; useVenv?: boolean };
+}
 ```
 
 ## API Reference
@@ -114,100 +313,55 @@ await sandbox.destroy();
 | `shell(command)` | Execute shell command     |
 | `destroy()`      | Cleanup sandbox resources |
 
-### Node/Python Sandbox (via State Mixin)
+### Node/Python Sandbox
 
-| Method                        | Description              |
-| ----------------------------- | ------------------------ |
-| `execute(code)`               | Execute code in runtime  |
-| `fs.read(path)`               | Read file content        |
-| `fs.write(path, data)`        | Write file content       |
-| `fs.list(path)`               | List directory contents  |
-| `fs.exists(path)`             | Check if file exists     |
-| `fs.delete(path)`             | Delete file              |
-| `env.get(key)`                | Get environment variable |
-| `env.set(key, value)`         | Set environment variable |
-| `storage.getItem(key)`        | Get storage value        |
-| `storage.setItem(key, value)` | Set storage value        |
+| Method                        | Description             |
+| ----------------------------- | ----------------------- |
+| `execute(code)`               | Execute code in runtime |
+| `fs.read(path)`               | Read file content       |
+| `fs.write(path, data)`        | Write file content      |
+| `fs.list(path)`               | List directory          |
+| `fs.exists(path)`             | Check file exists       |
+| `fs.delete(path)`             | Delete file             |
+| `env.get(key)`                | Get env variable        |
+| `env.set(key, value)`         | Set env variable        |
+| `env.has(key)`                | Check env exists        |
+| `env.delete(key)`             | Delete env variable     |
+| `env.all()`                   | Get all env variables   |
+| `storage.getItem(key)`        | Get storage value       |
+| `storage.setItem(key, value)` | Set storage value       |
+| `storage.removeItem(key)`     | Remove storage value    |
+| `storage.clear()`             | Clear all storage       |
+| `getStateLog()`               | Get recorded operations |
 
-## Configuration
+### StateLog
 
-```typescript
-interface SandboxConfig {
-  // Isolator type (required)
-  isolator: "local" | "cloudflare" | "e2b" | "docker";
-
-  // Runtime type (default: "shell")
-  runtime?: "shell" | "node" | "python";
-
-  // Initial environment variables
-  env?: Record<string, string>;
-
-  // Resource limits
-  limits?: {
-    timeout?: number; // milliseconds
-    memory?: number; // bytes
-    cpu?: number; // percentage
-  };
-
-  // Node-specific config
-  node?: {
-    packageManager?: "npm" | "yarn" | "pnpm" | "bun";
-    version?: string;
-  };
-
-  // Python-specific config
-  python?: {
-    version?: string;
-    useVenv?: boolean;
-  };
-}
-```
-
-## Isolators
-
-| Isolator       | Isolation Level       | Startup Time | Use Case        |
-| -------------- | --------------------- | ------------ | --------------- |
-| **local**      | Process               | 10-50ms      | Development     |
-| **cloudflare** | Container             | 100-500ms    | Edge deployment |
-| **e2b**        | MicroVM (Firecracker) | 150ms        | Production      |
-| **docker**     | Container             | 100-500ms    | Custom images   |
-
-```typescript
-// Switch isolator without changing code
-const devSandbox = createSandbox({ isolator: "local", runtime: "node" });
-const prodSandbox = createSandbox({ isolator: "e2b", runtime: "node" });
-```
-
-## Architecture
-
-```
-createSandbox({ isolator, runtime? })
-         │
-         ├── runtime: "shell" (default)
-         │   └── BaseSandbox (shell, destroy)
-         │
-         ├── runtime: "node"
-         │   └── BaseSandbox + withState (fs, env, storage) + withNodeExecute
-         │
-         └── runtime: "python"
-             └── BaseSandbox + withState (fs, env, storage) + withPythonExecute
-```
+| Method                        | Description                |
+| ----------------------------- | -------------------------- |
+| `buildStateLog()`             | Create new StateLog        |
+| `loadStateLog(json)`          | Load from JSON             |
+| `log.fs.write(path, data)`    | Record fs.write            |
+| `log.env.set(key, value)`     | Record env.set             |
+| `log.storage.set(key, value)` | Record storage.set         |
+| `log.toJSON()`                | Serialize to JSON          |
+| `log.compact()`               | Merge redundant operations |
 
 ## Packages
 
-| Package                               | Description         |
-| ------------------------------------- | ------------------- |
-| [`sandboxxjs`](./packages/sandboxjs)  | Main API            |
-| [`@sandboxxjs/core`](./packages/core) | Core implementation |
-| [`@sandboxxjs/cli`](./packages/cli)   | CLI tool            |
+| Package                                 | Description         |
+| --------------------------------------- | ------------------- |
+| [`sandboxxjs`](./packages/sandboxjs)    | Main API            |
+| [`@sandboxxjs/core`](./packages/core)   | Core implementation |
+| [`@sandboxxjs/state`](./packages/state) | State management    |
+| [`@sandboxxjs/cli`](./packages/cli)     | CLI tool            |
 
 ## Ecosystem
 
 Part of the [Deepractice](https://github.com/Deepractice) AI Agent infrastructure:
 
-- **[PromptX](https://github.com/Deepractice/PromptX)** - AI Agent context platform
+- **[PromptX](https://github.com/Deepractice/PromptX)** - AI Agent prompt engineering platform
 - **[AgentX](https://github.com/Deepractice/AgentX)** - AI Agent runtime platform
-- **[ResourceX](https://github.com/Deepractice/ResourceX)** - Unified resource manager (ARP)
+- **[ResourceX](https://github.com/Deepractice/ResourceX)** - Unified resource manager (ARP protocol)
 - **[ToolX](https://github.com/Deepractice/ToolX)** - Tool integration (Build System for SandboX)
 - **[UIX](https://github.com/Deepractice/UIX)** - AI-to-UI protocol layer
 
@@ -223,6 +377,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and guidelines.
 
 <div align="center">
   <p>
-    Built with care by <a href="https://github.com/Deepractice">Deepractice</a>
+    Built with ❤️ by <a href="https://github.com/Deepractice">Deepractice</a>
   </p>
 </div>
