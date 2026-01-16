@@ -3,6 +3,7 @@
  */
 
 import { createResourceX, deepracticeHandler, type ResourceX } from "resourcexjs";
+import type { StateLogEntry } from "./types.js";
 
 export interface StateStore {
   // Log operations
@@ -15,6 +16,9 @@ export interface StateStore {
   saveBlob(ref: string, data: Buffer): Promise<void>;
   loadBlob(ref: string): Promise<Buffer | null>;
   deleteBlob(ref: string): Promise<void>;
+
+  // AOF operations
+  appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void>;
 }
 
 export interface StateStoreOptions {
@@ -27,21 +31,30 @@ export interface StateStoreOptions {
 class MemoryStateStore implements StateStore {
   private logs = new Map<string, string>();
   private blobs = new Map<string, Buffer>();
+  private entries = new Map<string, StateLogEntry[]>();
 
   async saveLog(key: string, data: string): Promise<void> {
     this.logs.set(key, data);
   }
 
   async loadLog(key: string): Promise<string | null> {
+    // Check if we have entries (JSON Lines)
+    const entries = this.entries.get(key);
+    if (entries && entries.length > 0) {
+      return JSON.stringify(entries);
+    }
+    // Fallback to logs (JSON array)
     return this.logs.get(key) ?? null;
   }
 
   async deleteLog(key: string): Promise<void> {
     this.logs.delete(key);
+    this.entries.delete(key);
   }
 
   async listLogs(): Promise<string[]> {
-    return [...this.logs.keys()];
+    const keys = new Set([...this.logs.keys(), ...this.entries.keys()]);
+    return [...keys];
   }
 
   async saveBlob(ref: string, data: Buffer): Promise<void> {
@@ -55,6 +68,12 @@ class MemoryStateStore implements StateStore {
   async deleteBlob(ref: string): Promise<void> {
     this.blobs.delete(ref);
   }
+
+  async appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void> {
+    const entries = this.entries.get(sandboxId) ?? [];
+    entries.push(entry);
+    this.entries.set(sandboxId, entries);
+  }
 }
 
 /**
@@ -63,15 +82,25 @@ class MemoryStateStore implements StateStore {
  */
 class ResourceXStateStore implements StateStore {
   private rx: ResourceX;
+  private basePath: string;
 
   constructor() {
     this.rx = createResourceX({
       transports: [deepracticeHandler()],
     });
+    // Get base path from home directory
+    const os = require("os");
+    const path = require("path");
+    this.basePath = path.join(os.homedir(), ".deepractice/sandbox");
   }
 
   private logUrl(key: string): string {
     return `@text:deepractice://sandbox/state-logs/${key}.json`;
+  }
+
+  private logPath(sandboxId: string): string {
+    const path = require("path");
+    return path.join(this.basePath, "state-logs", `${sandboxId}.jsonl`);
   }
 
   private blobUrl(ref: string): string {
@@ -83,17 +112,43 @@ class ResourceXStateStore implements StateStore {
   }
 
   async loadLog(key: string): Promise<string | null> {
+    const fs = require("fs/promises");
+
+    // Try loading from JSON Lines file first
+    const jsonlPath = this.logPath(key);
     try {
-      const exists = await this.rx.exists(this.logUrl(key));
-      if (!exists) return null;
-      const resource = await this.rx.resolve(this.logUrl(key));
-      return resource.content as string;
+      const content = await fs.readFile(jsonlPath, "utf-8");
+      // JSON Lines → JSON Array
+      const entries = content
+        .trim()
+        .split("\n")
+        .filter((line: string) => line)
+        .map((line: string) => JSON.parse(line));
+      return JSON.stringify(entries);
     } catch {
-      return null;
+      // Fallback to ResourceX (old JSON format)
+      try {
+        const exists = await this.rx.exists(this.logUrl(key));
+        if (!exists) return null;
+        const resource = await this.rx.resolve(this.logUrl(key));
+        return resource.content as string;
+      } catch {
+        return null;
+      }
     }
   }
 
   async deleteLog(key: string): Promise<void> {
+    const fs = require("fs/promises");
+
+    // Delete JSON Lines file
+    try {
+      await fs.unlink(this.logPath(key));
+    } catch {
+      // Ignore
+    }
+
+    // Delete old JSON file
     try {
       const exists = await this.rx.exists(this.logUrl(key));
       if (exists) {
@@ -107,6 +162,20 @@ class ResourceXStateStore implements StateStore {
   async listLogs(): Promise<string[]> {
     // TODO: Implement when ResourceX supports list
     return [];
+  }
+
+  async appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void> {
+    const fs = require("fs/promises");
+    const path = require("path");
+
+    const filePath = this.logPath(sandboxId);
+
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+
+    // Append one line of JSON (true AOF)
+    const line = JSON.stringify(entry) + "\n";
+    await fs.appendFile(filePath, line, "utf-8");
   }
 
   async saveBlob(ref: string, data: Buffer): Promise<void> {

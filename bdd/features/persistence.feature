@@ -24,3 +24,24 @@ Feature: State Persistence
     And I save the log to store with key "example-persist"
     And I load the log from store with key "example-persist"
     Then the loaded log should have 2 entries
+
+  @persistence @id
+  Scenario: Sandbox auto-generates unique ID
+    Given I create a sandbox with state recording enabled
+    Then the sandbox should have a unique ID
+    And the ID should match pattern "sandbox-[a-zA-Z0-9_-]+"
+
+  @persistence @auto
+  Scenario: Auto-persist on every operation (enableRecord = autoPersist)
+    Given I create a sandbox with enableRecord true
+    When I write "data" to file "test.txt"
+    And I set environment variable "KEY" to "value"
+    Then the StateLog file should exist at "~/.deepractice/sandbox/state-logs/{id}.jsonl"
+    And the file should contain 2 lines
+
+  @persistence @memory
+  Scenario: Memory store for testing
+    Given I create a sandbox with store "memory"
+    When I write "data" to file "test.txt"
+    Then no file should be created on disk
+    And the StateLog should still record the operation

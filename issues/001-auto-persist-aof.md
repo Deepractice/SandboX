@@ -46,6 +46,37 @@ await store.saveLog("my-custom-key", log.toJSON()); // ❌ 冗长且易错
 
 如果程序崩溃或忘记保存，所有状态丢失。
 
+## 设计决策（2026-01-16 讨论确定）
+
+### 决策 1：Sandbox ID
+
+- **位置**：BaseSandbox 层，所有实例都有 ID
+- **格式**：`sandbox-{nanoid}`，例如 `sandbox-V1StGXR8_Z5jdHi`
+- **自定义**：暂不支持用户自定义 ID，全部自动生成
+
+### 决策 2：Store 配置
+
+- **简化**：`enableRecord: true` = 自动持久化（无需单独的 `autoPersist` 参数）
+- **默认**：resourcex store（持久化到文件）
+- **测试**：`store: "memory"` 用于测试场景
+
+### 决策 3：AOF 追加实现
+
+- **方案**：原生 `fs.appendFile` + JSON Lines 格式
+- **路径**：ResourceX 负责路径解析（`~/.deepractice/sandbox/state-logs/`）
+- **追加**：原生 fs 实现，不依赖 ResourceX 的写入能力
+
+### 决策 4：listLogs 实现
+
+- **方案**：原生 fs 读目录，和 append 配对
+- **原因**：ResourceX 暂不支持 list 操作
+
+### 决策 5：恢复机制
+
+- **方案**：不内置 `restoreFrom`，用户自己处理恢复逻辑
+- **API**：保持现有 `initializeLog` 参数
+- **原因**：恢复数据源不一定是文件，用户自己决定
+
 ## 期望设计
 
 ### AOF (Append-Only File) 模式
@@ -61,43 +92,44 @@ await store.saveLog("my-custom-key", log.toJSON()); // ❌ 冗长且易错
 ```typescript
 import { createSandbox } from "sandboxxjs";
 
-// 自动生成 ID，自动持久化
+// 自动生成 ID，enableRecord = 自动持久化
 const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
   state: {
-    enableRecord: true,
-    autoPersist: true, // 自动持久化
+    enableRecord: true, // 自动持久化到 resourcex
   },
 });
 
-console.log(sandbox.id); // "sandbox-abc123" ✅ 自动生成
+console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi" ✅ 自动生成
 
-// 每个操作自动追加到文件
+// 每个操作自动追加到文件（JSON Lines 格式）
 await sandbox.fs.write("config.json", "{}");
-// → 自动追加：~/.deepractice/sandbox/state-logs/sandbox-abc123.json
-//   [{"op":"fs.write","args":{"path":"config.json","data":"{}"}}]
+// → 自动追加：~/.deepractice/sandbox/state-logs/sandbox-V1StGXR8_Z5jdHi.jsonl
+//   {"op":"fs.write","args":{"path":"config.json","data":"{}"}}
 
 sandbox.env.set("KEY", "value");
 // → 自动追加同一文件
-//   [{"op":"fs.write",...},{"op":"env.set","args":{"key":"KEY","value":"value"}}]
+//   {"op":"env.set","args":{"key":"KEY","value":"value"}}
 
 // 不需要手动 save！崩溃也不会丢数据
 ```
 
-**恢复（通过 ID）：**
+**恢复（用户自己处理）：**
 
 ```typescript
-// 列出所有 sandbox
-const sandboxes = await listSandboxes();
-// → ["sandbox-abc123", "sandbox-def456"]
+import { loadStateLog } from "@sandboxxjs/state";
 
-// 从 ID 恢复
+// 用户自己加载（从文件、数据库、API 等）
+const json = await loadFromSomewhere();
+const log = loadStateLog(json);
+
+// 传入 initializeLog
 const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
   state: {
-    restoreFrom: "sandbox-abc123", // 自动加载 StateLog
+    initializeLog: log,
   },
 });
 
@@ -112,20 +144,20 @@ sandbox.env.get("KEY"); // "value"
 
 ```typescript
 // packages/core/src/Sandbox.ts
+import { nanoid } from "nanoid";
+
 export class BaseSandbox implements ISandbox {
   public readonly id: string;
 
   constructor(config: SandboxConfig) {
-    // 生成唯一 ID
-    this.id = config.id ?? `sandbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    // 示例：sandbox-1737019200000-a7b3c9
+    // 自动生成唯一 ID（不支持自定义）
+    this.id = `sandbox-${nanoid()}`;
+    // 示例：sandbox-V1StGXR8_Z5jdHi
   }
 }
 ```
 
-### 2. 自动持久化机制
-
-**Config 扩展：**
+### 2. StateConfig 扩展
 
 ```typescript
 export interface StateConfig {
@@ -133,50 +165,47 @@ export interface StateConfig {
   initializeLog?: StateLog;
   enableRecord?: boolean;
 
-  // 新增
-  autoPersist?: boolean; // 自动持久化
-  restoreFrom?: string; // 从 ID 恢复
+  // 新增：store 类型（默认 resourcex，测试用 memory）
+  store?: "resourcex" | "memory";
 }
 ```
 
-**createState 扩展：**
+**说明**：
+
+- `enableRecord: true` = 自动持久化（无需单独的 `autoPersist`）
+- `store` 默认 `"resourcex"`，测试时可设为 `"memory"`
+- 不添加 `restoreFrom`，用户自己处理恢复
+
+### 3. createState 扩展
 
 ```typescript
 export interface CreateStateOptions {
   sandbox: Sandbox;
   env?: Record<string, string>;
   enableRecord?: boolean;
-
-  // 新增
-  autoPersist?: boolean;
-  sandboxId?: string; // Sandbox ID for persistence
+  store?: "resourcex" | "memory";
+  sandboxId: string; // Sandbox ID for persistence
 }
 
 export function createState(options: CreateStateOptions): StateResult {
-  const { sandbox, enableRecord, autoPersist, sandboxId } = options;
+  const { sandbox, enableRecord, store = "resourcex", sandboxId } = options;
 
-  // 如果开启自动持久化，创建 store
-  let store: StateStore | undefined;
-  if (autoPersist) {
-    store = createStateStore({ type: "resourcex" });
-  }
+  // 创建 store 实例
+  const stateStore = createStateStore({ type: store });
 
   // ... 创建 base instances
 
   if (enableRecord) {
     const stateLog = buildStateLog();
 
-    // Proxy 拦截时，同时异步追加到文件
+    // Proxy 拦截时，异步追加到文件
     const recordingProxy = createRecordingProxy(base, namespace, stateLog, {
-      onRecord:
-        autoPersist && store && sandboxId
-          ? async (entry) => {
-              // 异步追加到文件（不阻塞）
-              await store.appendEntry(sandboxId, entry).catch((err) => {
-                console.error(`[SandboX] Failed to persist entry:`, err);
-              });
-            }
-          : undefined,
+      onRecord: async (entry) => {
+        // 异步追加（不阻塞主流程）
+        stateStore.appendEntry(sandboxId, entry).catch((err) => {
+          console.error(`[SandboX] Failed to persist entry:`, err);
+        });
+      },
     });
 
     return { fs, env, storage, stateLog };
@@ -184,7 +213,7 @@ export function createState(options: CreateStateOptions): StateResult {
 }
 ```
 
-### 3. StateStore 新增 append 方法
+### 4. StateStore 新增方法
 
 ```typescript
 export interface StateStore {
@@ -196,192 +225,143 @@ export interface StateStore {
 
   // 新增
   appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void>;
-  save(sandbox: Sandbox): Promise<void>; // 高层 API
 }
 ```
 
-**appendEntry 实现（AOF）：**
+**appendEntry 实现（原生 fs + JSON Lines）：**
 
 ```typescript
+import { appendFile, mkdir } from "fs/promises";
+import { dirname } from "path";
+
+// ResourceXStateStore
 async appendEntry(sandboxId: string, entry: StateLogEntry): Promise<void> {
-  const logUrl = this.logUrl(sandboxId);
+  const filePath = this.logPath(sandboxId); // ~/.deepractice/sandbox/state-logs/{id}.jsonl
 
-  // 读取现有内容
-  let entries: StateLogEntry[] = [];
+  // 确保目录存在
+  await mkdir(dirname(filePath), { recursive: true });
+
+  // 追加一行 JSON（真正的 AOF）
+  const line = JSON.stringify(entry) + "\n";
+  await appendFile(filePath, line, "utf-8");
+}
+
+private logPath(sandboxId: string): string {
+  return `${this.basePath}/state-logs/${sandboxId}.jsonl`;
+}
+```
+
+**loadLog 更新（支持 JSON Lines）：**
+
+```typescript
+import { readFile } from "fs/promises";
+
+async loadLog(key: string): Promise<string | null> {
+  const filePath = this.logPath(key);
   try {
-    const exists = await this.rx.exists(logUrl);
-    if (exists) {
-      const resource = await this.rx.resolve(logUrl);
-      entries = JSON.parse(resource.content as string);
-    }
+    const content = await readFile(filePath, "utf-8");
+    // JSON Lines → JSON Array
+    const entries = content
+      .trim()
+      .split("\n")
+      .filter(line => line)
+      .map(line => JSON.parse(line));
+    return JSON.stringify(entries);
   } catch {
-    // 文件不存在，从空开始
+    return null;
   }
-
-  // 追加新 entry
-  entries.push(entry);
-
-  // 写回文件
-  await this.rx.deposit(logUrl, JSON.stringify(entries));
 }
 ```
 
-**save 高层 API：**
+## 性能优化（可选，未来考虑）
+
+当前方案使用 JSON Lines + `fs.appendFile`，已经是真正的 AOF，无需 read-modify-write。
+
+如果未来遇到性能瓶颈，可考虑：
+
+**批量写入：**
 
 ```typescript
-async save(sandbox: Sandbox): Promise<void> {
-  const log = (sandbox as any).getStateLog?.();
-  if (!log) {
-    throw new Error("Sandbox does not support state recording");
-  }
-  await this.saveLog(sandbox.id, log.toJSON());
-}
-```
-
-### 4. restoreFrom 实现
-
-```typescript
-// packages/core/src/mixins/withState.ts
-constructor(config: SandboxConfig) {
-  super(config);
-
-  const stateConfig = config.state;
-
-  // 如果指定 restoreFrom，自动加载
-  if (stateConfig?.restoreFrom) {
-    const store = createStateStore({ type: "resourcex" });
-    const json = await store.loadLog(stateConfig.restoreFrom);
-    if (json) {
-      stateConfig.initializeLog = loadStateLog(json);
-    }
-  }
-
-  // ... 后续逻辑
-}
-```
-
-### 5. listSandboxes 工具函数
-
-```typescript
-// packages/sandboxxjs/src/index.ts
-export async function listSandboxes(): Promise<string[]> {
-  const store = createStateStore({ type: "resourcex" });
-  return await store.listLogs();
-}
-```
-
-## 性能优化（可选）
-
-### 问题：每次 append 都 read-modify-write
-
-**优化方案 A - 批量写入：**
-
-```typescript
-// 每隔 1s 或 100 条 flush 一次
+// 每隔 100ms 或 10 条 flush 一次
 class BufferedStateStore {
   private buffer: Map<string, StateLogEntry[]> = new Map();
 
   async appendEntry(sandboxId: string, entry: StateLogEntry) {
-    // 加入缓冲区
     const entries = this.buffer.get(sandboxId) ?? [];
     entries.push(entry);
     this.buffer.set(sandboxId, entries);
-
-    // 定时或达到阈值时 flush
     this.scheduleFlush(sandboxId);
   }
 }
 ```
 
-**优化方案 B - 使用 ResourceX list + append：**
-
-等 ResourceX 支持 `append()` 操作后直接追加。
-
 ## 实现步骤
 
-### Phase 1: 基础设施（必须）
+### Phase 1: 基础设施
 
 1. **Sandbox 添加 ID**
-   - [ ] 在 `BaseSandbox` 构造函数生成 ID
-   - [ ] 支持 `config.id` 自定义 ID
+   - [ ] 安装 `nanoid` 依赖
+   - [ ] 在 `BaseSandbox` 构造函数生成 ID（`sandbox-{nanoid}`）
    - [ ] 导出 `id` 属性
+   - [ ] 更新类型定义
 
-2. **StateStore 高层 API**
-   - [ ] 添加 `save(sandbox)` 方法
-   - [ ] 添加 `load(id)` 返回 StateLog
-   - [ ] 添加 `listSandboxes()` 工具函数
+2. **StateConfig 扩展**
+   - [ ] 添加 `store?: "resourcex" | "memory"` 配置
 
-3. **测试**
-   - [ ] 单元测试：Sandbox ID 生成
-   - [ ] BDD 测试：使用 sandbox.id 保存/恢复
+3. **StateStore 新增方法**
+   - [ ] 添加 `appendEntry()` 方法（原生 fs + JSON Lines）
+   - [ ] 更新 `loadLog()` 支持 JSON Lines 格式
 
-### Phase 2: 自动持久化（推荐）
+4. **createState 集成**
+   - [ ] 接收 `sandboxId` 和 `store` 参数
+   - [ ] Proxy 录制时调用 `store.appendEntry()`
 
-4. **Config 扩展**
-   - [ ] 添加 `state.autoPersist` 配置
-   - [ ] 添加 `state.restoreFrom` 配置
+5. **withState 更新**
+   - [ ] 传递 `sandbox.id` 和 `store` 配置给 createState
 
-5. **AOF 追加**
-   - [ ] StateStore 添加 `appendEntry()` 方法
-   - [ ] createState 集成 store（传入 sandboxId）
-   - [ ] Proxy 录制时自动追加到文件
+### Phase 2: 测试
 
-6. **restoreFrom 实现**
-   - [ ] withState 构造时检查 `restoreFrom`
-   - [ ] 自动从 store 加载 StateLog
+6. **单元测试**
+   - [ ] Sandbox ID 生成唯一性
+   - [ ] StateStore.appendEntry() JSON Lines 格式
+   - [ ] StateStore.loadLog() 解析 JSON Lines
 
-7. **测试**
-   - [ ] 单元测试：appendEntry AOF
-   - [ ] BDD 测试：autoPersist 自动保存
-   - [ ] BDD 测试：restoreFrom 自动恢复
-
-### Phase 3: 性能优化（可选）
-
-8. **批量写入**
-   - [ ] 实现 BufferedStateStore
-   - [ ] 配置 flush 策略（时间间隔、条目数）
+7. **BDD 测试**
+   - [ ] Sandbox 自动生成 ID
+   - [ ] enableRecord 自动持久化
 
 ## 测试要求
 
-### BDD 场景（必须）
+### BDD 场景
 
 ```gherkin
-@persistence @auto
+@persistence @id
 Scenario: Sandbox auto-generates unique ID
   Given I create a sandbox with state recording enabled
   Then the sandbox should have a unique ID
-  And the ID should start with "sandbox-"
+  And the ID should match pattern "sandbox-[a-zA-Z0-9_-]+"
 
 @persistence @auto
-Scenario: Auto-persist on every operation
-  Given I create a sandbox with auto-persist enabled
+Scenario: Auto-persist on every operation (enableRecord = autoPersist)
+  Given I create a sandbox with enableRecord true
   When I write "data" to file "test.txt"
   And I set environment variable "KEY" to "value"
-  Then the StateLog file should exist at "~/.deepractice/sandbox/state-logs/{id}.json"
-  And the file should contain 2 entries
+  Then the StateLog file should exist at "~/.deepractice/sandbox/state-logs/{id}.jsonl"
+  And the file should contain 2 lines
 
-@persistence @restore
-Scenario: Restore from sandbox ID
-  Given I create a sandbox with auto-persist enabled
-  And I write "original" to file "data.txt"
-  And I save the sandbox ID
-  When I destroy the sandbox
-  And I create a new sandbox with restoreFrom the saved ID
-  Then file "data.txt" should exist
-  And the file content should be "original"
-
-@persistence @list
-Scenario: List all sandboxes
-  Given I create 3 sandboxes with auto-persist
-  When I list all sandboxes
-  Then the list should contain 3 sandbox IDs
+@persistence @memory
+Scenario: Memory store for testing
+  Given I create a sandbox with store "memory"
+  When I write "data" to file "test.txt"
+  Then no file should be created on disk
+  And the StateLog should still record the operation
 ```
 
-### 单元测试（必须）
+### 单元测试
 
-- `StateStore.appendEntry()` - AOF 追加测试
-- `StateStore.save(sandbox)` - 高层 API 测试
 - Sandbox ID 生成唯一性测试
+- `StateStore.appendEntry()` - JSON Lines 追加测试
+- `StateStore.loadLog()` - JSON Lines 解析测试
 
 ## 参考实现
 
@@ -407,136 +387,75 @@ RUN npm build      # Layer 3
 
 每个操作是独立的层，可以缓存和复用。
 
-### SandboX StateLog (当前)
+### SandboX StateLog (JSON Lines 格式)
 
-```json
-[
-  { "op": "fs.write", "args": { "path": "config.json", "data": "{}" } },
-  { "op": "env.set", "args": { "key": "NODE_ENV", "value": "prod" } },
-  { "op": "storage.set", "args": { "key": "version", "value": "1.0.0" } }
-]
+```
+{"op":"fs.write","args":{"path":"config.json","data":"{}"}}
+{"op":"env.set","args":{"key":"NODE_ENV","value":"prod"}}
+{"op":"storage.set","args":{"key":"version","value":"1.0.0"}}
 ```
 
-已经是 binlog 格式，只差自动追加。
+每行一个 JSON 对象，支持真正的 append。
 
 ## API 设计总结
 
 ### 用户层 API（sandboxxjs）
 
 ```typescript
-// 创建 - 自动 ID + 自动持久化
+// 创建 - 自动 ID + enableRecord = 自动持久化
 const sandbox = createSandbox({
   isolator: "local",
   runtime: "node",
   state: {
-    autoPersist: true,
+    enableRecord: true, // 自动持久化到 ~/.deepractice/sandbox/state-logs/{id}.jsonl
   },
 });
 
-console.log(sandbox.id); // "sandbox-1737019200-a7b3c9"
+console.log(sandbox.id); // "sandbox-V1StGXR8_Z5jdHi"
 
 // 操作 - 自动追加到文件
 await sandbox.fs.write("config.json", "{}");
 
-// 恢复 - 通过 ID
+// 恢复 - 用户自己处理
+import { loadStateLog } from "@sandboxxjs/state";
+const log = loadStateLog(jsonFromSomewhere);
 const restored = createSandbox({
   isolator: "local",
   runtime: "node",
-  state: {
-    restoreFrom: "sandbox-1737019200-a7b3c9",
-  },
+  state: { initializeLog: log },
 });
-
-// 列出所有 sandbox
-import { listSandboxes } from "sandboxxjs";
-const ids = await listSandboxes(); // ["sandbox-...", ...]
 ```
 
-### 底层 API（@sandboxxjs/state，可选使用）
+### 底层 API（@sandboxxjs/state）
 
 ```typescript
-// 高层 API
-await store.save(sandbox);
-const log = await store.load(sandboxId);
-
-// 底层 API（已有）
-await store.saveLog(key, json);
-await store.appendEntry(sandboxId, entry);
+// StateStore API
+await store.appendEntry(sandboxId, entry); // AOF 追加
+await store.loadLog(sandboxId); // 加载（支持 JSON Lines）
+await store.saveLog(key, json); // 保存
+await store.deleteLog(key); // 删除
 ```
-
-## 实现优先级
-
-| Phase   | 功能                | 优先级 | 理由                   |
-| ------- | ------------------- | ------ | ---------------------- |
-| Phase 1 | Sandbox ID          | **高** | 基础设施，必须先有     |
-| Phase 1 | StateStore 高层 API | **高** | 简化用户体验           |
-| Phase 2 | autoPersist (AOF)   | **中** | 核心功能，但可以先手动 |
-| Phase 2 | restoreFrom         | **中** | 配合 autoPersist       |
-| Phase 3 | 批量优化            | **低** | 性能优化，先跑通再说   |
-
-**建议：** 先实现 Phase 1（Sandbox ID + 高层 API），再考虑 Phase 2（自动持久化）。
-
-## 技术细节
-
-### 异步追加不阻塞
-
-```typescript
-// 录制时异步写入，不影响主流程
-proxy.set = (...args) => {
-  const result = base.set(...args);
-
-  // 异步追加（catch 错误但不抛出）
-  if (autoPersist) {
-    store.appendEntry(sandboxId, entry).catch((err) => {
-      console.error(`[SandboX] Persist failed:`, err);
-    });
-  }
-
-  return result;
-};
-```
-
-### 文件格式（JSON Lines 可选）
-
-当前：单个 JSON 数组
-
-```json
-[{"op":"fs.write",...},{"op":"env.set",...}]
-```
-
-可选：JSON Lines（每行一个 entry，真正的 AOF）
-
-```
-{"op":"fs.write",...}
-{"op":"env.set",...}
-```
-
-**优点：**
-
-- 追加更高效（不需要 parse 整个文件）
-- 支持超大文件
-
-**缺点：**
-
-- 不是标准 JSON（需要专门解析）
-
-**建议：** Phase 1 用 JSON 数组，Phase 3 优化时考虑 JSON Lines。
 
 ## 相关文件
 
 - `packages/core/src/Sandbox.ts` - 添加 ID
-- `packages/core/src/types.ts` - 扩展 StateConfig
-- `packages/state/src/StateStore.ts` - 添加 append 和高层 API
-- `packages/state/src/createState.ts` - 集成 autoPersist
-- `packages/sandboxxjs/src/index.ts` - 导出 listSandboxes
+- `packages/core/src/types.ts` - 扩展 StateConfig（添加 store）
+- `packages/state/src/StateStore.ts` - 添加 appendEntry，更新 loadLog
+- `packages/state/src/createState.ts` - 集成 store 和 sandboxId
+- `packages/core/src/mixins/withState.ts` - 传递 id 和 store 配置
 
 ## 成功标准
 
-1. 用户无需了解 `@sandboxxjs/state` 就能使用持久化
-2. Sandbox 自动生成唯一 ID
-3. `autoPersist: true` 时，每个操作自动保存到文件
-4. `restoreFrom: id` 时，自动恢复状态
-5. 所有 BDD 测试通过
+1. Sandbox 自动生成唯一 ID（`sandbox-{nanoid}`）
+2. `enableRecord: true` 时，每个操作自动追加到 `.jsonl` 文件
+3. `store: "memory"` 可用于测试（不写文件）
+4. 所有 BDD 测试通过
+
+## 未来工作（不在本 issue 范围）
+
+- `listSandboxes()` - 涉及生命周期管理
+- `restoreFrom` - 用户自己处理恢复
+- 批量写入优化
 
 ---
 
@@ -545,3 +464,4 @@ proxy.set = (...args) => {
 **Labels**: enhancement, state, persistence, dx
 **Assignee**: TBD
 **Created**: 2026-01-16
+**Updated**: 2026-01-16（设计决策讨论完成）

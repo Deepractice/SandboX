@@ -19,6 +19,7 @@ interface PersistenceWorld extends SandboxWorld {
   store?: StateStore;
   builtLog?: StateLog;
   loadedLog?: StateLog;
+  sandboxId?: string;
 }
 
 // StateStore management
@@ -96,4 +97,112 @@ When(
 Then("the loaded log should have {int} entries", function (this: PersistenceWorld, count: number) {
   assert.ok(this.loadedLog, "Loaded log should exist");
   assert.equal(this.loadedLog.getEntries().length, count, `Expected ${count} entries`);
+});
+
+// Sandbox ID assertions
+Then("the sandbox should have a unique ID", function (this: PersistenceWorld) {
+  assert.ok(this.sandbox, "Sandbox should exist");
+  assert.ok((this.sandbox as any).id, "Sandbox should have an ID");
+  assert.equal(typeof (this.sandbox as any).id, "string", "ID should be a string");
+  assert.ok((this.sandbox as any).id.length > 0, "ID should not be empty");
+});
+
+Then("the ID should match pattern {string}", function (this: PersistenceWorld, pattern: string) {
+  assert.ok(this.sandbox, "Sandbox should exist");
+  const id = (this.sandbox as any).id;
+  const regex = new RegExp(pattern);
+  assert.ok(regex.test(id), `ID "${id}" should match pattern "${pattern}"`);
+});
+
+// Auto-persist scenario
+Given("I create a sandbox with enableRecord true", function (this: PersistenceWorld) {
+  this.sandbox = createSandbox({
+    runtime: "node",
+    isolator: "local",
+    state: {
+      enableRecord: true,
+    },
+  }) as NodeSandbox;
+  this.sandboxId = (this.sandbox as any).id;
+});
+
+Then(
+  "the StateLog file should exist at {string}",
+  async function (this: PersistenceWorld, pathPattern: string) {
+    assert.ok(this.sandboxId, "Sandbox ID should exist");
+    const os = await import("os");
+    const fs = await import("fs/promises");
+
+    // Replace {id} with actual sandbox ID and expand home directory
+    const filePath = pathPattern.replace("{id}", this.sandboxId).replace("~", os.homedir());
+
+    const exists = await fs
+      .access(filePath)
+      .then(() => true)
+      .catch(() => false);
+    assert.ok(exists, `File should exist at ${filePath}`);
+  }
+);
+
+Then(
+  "the file should contain {int} lines",
+  async function (this: PersistenceWorld, lineCount: number) {
+    assert.ok(this.sandboxId, "Sandbox ID should exist");
+    const os = await import("os");
+    const path = await import("path");
+    const fs = await import("fs/promises");
+
+    const filePath = path.join(
+      os.homedir(),
+      ".deepractice/sandbox/state-logs",
+      `${this.sandboxId}.jsonl`
+    );
+    const content = await fs.readFile(filePath, "utf-8");
+    const lines = content
+      .trim()
+      .split("\n")
+      .filter((line) => line);
+    assert.equal(lines.length, lineCount, `Expected ${lineCount} lines, got ${lines.length}`);
+  }
+);
+
+// Memory store scenario
+Given(
+  "I create a sandbox with store {string}",
+  function (this: PersistenceWorld, storeType: string) {
+    this.sandbox = createSandbox({
+      runtime: "node",
+      isolator: "local",
+      state: {
+        enableRecord: true,
+        store: storeType as "resourcex" | "memory",
+      },
+    }) as NodeSandbox;
+    this.sandboxId = (this.sandbox as any).id;
+  }
+);
+
+Then("no file should be created on disk", async function (this: PersistenceWorld) {
+  assert.ok(this.sandboxId, "Sandbox ID should exist");
+  const os = await import("os");
+  const path = await import("path");
+  const fs = await import("fs/promises");
+
+  const filePath = path.join(
+    os.homedir(),
+    ".deepractice/sandbox/state-logs",
+    `${this.sandboxId}.jsonl`
+  );
+  const exists = await fs
+    .access(filePath)
+    .then(() => true)
+    .catch(() => false);
+  assert.ok(!exists, `File should not exist at ${filePath} for memory store`);
+});
+
+Then("the StateLog should still record the operation", function (this: PersistenceWorld) {
+  const log = (this.sandbox as any).getStateLog();
+  assert.ok(log, "StateLog should exist");
+  const entries = log.getEntries();
+  assert.ok(entries.length > 0, "StateLog should have at least one entry");
 });
