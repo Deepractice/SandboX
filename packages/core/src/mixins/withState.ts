@@ -5,7 +5,7 @@
 import type { Sandbox, SandboxConfig, SandboxConstructor } from "../types.js";
 import {
   createState,
-  replayStateLog,
+  replayStateLogSync,
   type FileSystem,
   type Environment,
   type Storage,
@@ -44,9 +44,9 @@ export function withState<T extends Sandbox>(
       this.storage = state.storage;
       this.stateLog = state.stateLog;
 
-      // Replay initializeLog if provided
+      // Replay initializeLog if provided (sync version for constructor)
       if (stateConfig?.initializeLog) {
-        replayStateLog(stateConfig.initializeLog, this as unknown as WithState);
+        replayStateLogSync(stateConfig.initializeLog, this as unknown as WithState);
       }
     }
 

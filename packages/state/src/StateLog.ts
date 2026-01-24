@@ -73,18 +73,19 @@ class StateLog {
   }
 
   /**
-   * Serialize to JSON string
+   * Return entries array for JSON serialization
+   * Use JSON.stringify(log) or JSON.stringify(log.toJSON()) to get JSON string
    */
-  toJSON(): string {
-    return JSON.stringify(this.entries);
+  toJSON(): StateLogEntry[] {
+    return [...this.entries];
   }
 
   /**
-   * Deserialize from JSON string (internal use)
+   * Deserialize from JSON string or array
    */
-  static fromJSON(json: string): StateLog {
+  static fromJSON(json: string | StateLogEntry[]): StateLog {
     const log = new StateLog();
-    log.entries = JSON.parse(json);
+    log.entries = typeof json === "string" ? JSON.parse(json) : [...json];
     return log;
   }
 
@@ -154,8 +155,8 @@ export function buildStateLog(): StateLog {
 }
 
 /**
- * Load StateLog from JSON string
+ * Load StateLog from JSON string or entries array
  */
-export function loadStateLog(json: string): StateLog {
+export function loadStateLog(json: string | StateLogEntry[]): StateLog {
   return StateLog.fromJSON(json);
 }

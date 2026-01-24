@@ -41,6 +41,7 @@ export function withNodeExecute<T extends Sandbox>(
     /**
      * Execute code as a script (stdout mode)
      * Use console.log() to output results
+     * Throws ExecutionError if code fails
      */
     async execute(code: string): Promise<ExecuteResult> {
       await this.ensureNode();
@@ -48,6 +49,12 @@ export function withNodeExecute<T extends Sandbox>(
       // Escape single quotes in code
       const escapedCode = code.replace(/'/g, "'\\''");
       const result = await this.shell(`node -e '${escapedCode}'`);
+
+      if (!result.success) {
+        throw new ExecutionError(
+          result.stderr || `Execution failed with exit code ${result.exitCode}`
+        );
+      }
 
       return {
         success: result.success,
