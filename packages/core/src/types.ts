@@ -113,7 +113,7 @@ export interface ShellResult {
 // ============================================
 
 /**
- * Code execution capability
+ * Code execution capability (script mode - stdout)
  */
 export interface WithExecute {
   execute(code: string): Promise<ExecuteResult>;
@@ -132,15 +132,29 @@ export interface ExecuteResult {
   executionTime: number;
 }
 
+/**
+ * Expression evaluation capability (REPL mode - return value)
+ */
+export interface WithEvaluate {
+  evaluate(expr: string): Promise<EvaluateResult>;
+}
+
+export interface EvaluateResult {
+  /** Expression result value (as string) */
+  value: string;
+  /** Execution time in milliseconds */
+  executionTime: number;
+}
+
 // ============================================
 // Composed Types
 // ============================================
 
-/** Node sandbox = Base + State + Execute */
-export type NodeSandbox = Sandbox & WithState & WithExecute;
+/** Node sandbox = Base + State + Execute + Evaluate */
+export type NodeSandbox = Sandbox & WithState & WithExecute & WithEvaluate;
 
-/** Python sandbox = Base + State + Execute */
-export type PythonSandbox = Sandbox & WithState & WithExecute;
+/** Python sandbox = Base + State + Execute + Evaluate */
+export type PythonSandbox = Sandbox & WithState & WithExecute & WithEvaluate;
 
 /** Sandbox with State only */
 export type StateSandbox = Sandbox & WithState;

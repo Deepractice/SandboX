@@ -70,9 +70,13 @@ const sandbox = createSandbox({
   runtime: "node",
 });
 
-// Execute code
-const result = await sandbox.execute("1 + 1");
-console.log(result.output); // "2"
+// Evaluate expression (REPL mode - returns value)
+const { value } = await sandbox.evaluate("1 + 1");
+console.log(value); // "2"
+
+// Execute code (script mode - stdout)
+const { stdout } = await sandbox.execute("console.log('Hello')");
+console.log(stdout); // "Hello\n"
 
 // File system
 await sandbox.fs.write("config.json", '{"debug": true}');
@@ -335,24 +339,25 @@ interface SandboxConfig {
 
 ### Node/Python Sandbox
 
-| Method                        | Description             |
-| ----------------------------- | ----------------------- |
-| `execute(code)`               | Execute code in runtime |
-| `fs.read(path)`               | Read file content       |
-| `fs.write(path, data)`        | Write file content      |
-| `fs.list(path)`               | List directory          |
-| `fs.exists(path)`             | Check file exists       |
-| `fs.delete(path)`             | Delete file             |
-| `env.get(key)`                | Get env variable        |
-| `env.set(key, value)`         | Set env variable        |
-| `env.has(key)`                | Check env exists        |
-| `env.delete(key)`             | Delete env variable     |
-| `env.all()`                   | Get all env variables   |
-| `storage.getItem(key)`        | Get storage value       |
-| `storage.setItem(key, value)` | Set storage value       |
-| `storage.removeItem(key)`     | Remove storage value    |
-| `storage.clear()`             | Clear all storage       |
-| `getStateLog()`               | Get recorded operations |
+| Method                        | Description                              |
+| ----------------------------- | ---------------------------------------- |
+| `evaluate(expr)`              | Evaluate expression, return value (REPL) |
+| `execute(code)`               | Execute code, return stdout (script)     |
+| `fs.read(path)`               | Read file content                        |
+| `fs.write(path, data)`        | Write file content                       |
+| `fs.list(path)`               | List directory                           |
+| `fs.exists(path)`             | Check file exists                        |
+| `fs.delete(path)`             | Delete file                              |
+| `env.get(key)`                | Get env variable                         |
+| `env.set(key, value)`         | Set env variable                         |
+| `env.has(key)`                | Check env exists                         |
+| `env.delete(key)`             | Delete env variable                      |
+| `env.all()`                   | Get all env variables                    |
+| `storage.getItem(key)`        | Get storage value                        |
+| `storage.setItem(key, value)` | Set storage value                        |
+| `storage.removeItem(key)`     | Remove storage value                     |
+| `storage.clear()`             | Clear all storage                        |
+| `getStateLog()`               | Get recorded operations                  |
 
 ### StateLog
 

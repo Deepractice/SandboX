@@ -1,5 +1,5 @@
 /**
- * Node Execute mixin - adds execute capability for Node.js
+ * Node Execute mixin - adds execute and evaluate capabilities for Node.js
  */
 
 import type {
@@ -7,16 +7,18 @@ import type {
   SandboxConfig,
   SandboxConstructor,
   WithExecute,
+  WithEvaluate,
   ExecuteResult,
+  EvaluateResult,
 } from "../types.js";
 import { ExecutionError } from "../errors.js";
 
 /**
- * Add Node.js execute capability to sandbox
+ * Add Node.js execute and evaluate capabilities to sandbox
  */
 export function withNodeExecute<T extends Sandbox>(
   Base: SandboxConstructor<T>
-): SandboxConstructor<T & WithExecute> {
+): SandboxConstructor<T & WithExecute & WithEvaluate> {
   return class extends (Base as any) {
     private nodeChecked = false;
 
@@ -24,8 +26,7 @@ export function withNodeExecute<T extends Sandbox>(
       super(config);
     }
 
-    async execute(code: string): Promise<ExecuteResult> {
-      // Check if Node.js is available (only once per instance)
+    private async ensureNode(): Promise<void> {
       if (!this.nodeChecked) {
         const check = await this.shell("which node");
         if (!check.success) {
@@ -35,6 +36,14 @@ export function withNodeExecute<T extends Sandbox>(
         }
         this.nodeChecked = true;
       }
+    }
+
+    /**
+     * Execute code as a script (stdout mode)
+     * Use console.log() to output results
+     */
+    async execute(code: string): Promise<ExecuteResult> {
+      await this.ensureNode();
 
       // Escape single quotes in code
       const escapedCode = code.replace(/'/g, "'\\''");
@@ -48,5 +57,29 @@ export function withNodeExecute<T extends Sandbox>(
         executionTime: result.executionTime,
       };
     }
-  } as unknown as SandboxConstructor<T & WithExecute>;
+
+    /**
+     * Evaluate expression and return its value (REPL mode)
+     * Returns the value of the last expression
+     */
+    async evaluate(expr: string): Promise<EvaluateResult> {
+      await this.ensureNode();
+
+      // Escape single quotes in expression
+      const escapedExpr = expr.replace(/'/g, "'\\''");
+      // Use node -p to print the result of the expression
+      const result = await this.shell(`node -p '${escapedExpr}'`);
+
+      if (!result.success) {
+        throw new ExecutionError(
+          result.stderr || `Evaluation failed with exit code ${result.exitCode}`
+        );
+      }
+
+      return {
+        value: result.stdout.trim(),
+        executionTime: result.executionTime,
+      };
+    }
+  } as unknown as SandboxConstructor<T & WithExecute & WithEvaluate>;
 }
