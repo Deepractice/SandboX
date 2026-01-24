@@ -32,3 +32,16 @@ export function replayStateLogSync(log: StateLog, target: WithState): void {
     }
   }
 }
+
+/**
+ * Replay only fs operations from StateLog (async)
+ * Use this after constructor to complete fs initialization
+ */
+export async function replayStateLogFs(log: StateLog, target: WithState): Promise<void> {
+  for (const entry of log.getEntries()) {
+    const config = opRegistry[entry.op];
+    if (config && config.namespace === "fs") {
+      await config.replay(target, entry.args);
+    }
+  }
+}

@@ -43,7 +43,7 @@ When(
       this.store = createStateStore({ type: "memory" });
     }
 
-    await this.store.saveLog(key, log.toJSON());
+    await this.store.saveLog(key, JSON.stringify(log.toJSON()));
   }
 );
 
@@ -58,7 +58,7 @@ When(
   "I save the log to store with key {string}",
   async function (this: PersistenceWorld, key: string) {
     assert.ok(this.builtLog, "Built log should exist");
-    await this.store!.saveLog(key, this.builtLog.toJSON());
+    await this.store!.saveLog(key, JSON.stringify(this.builtLog.toJSON()));
   }
 );
 
@@ -88,8 +88,8 @@ When(
       },
     }) as NodeSandbox;
 
-    // Wait for replay to complete
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Complete async fs initialization
+    await (this.sandbox as NodeSandbox).init();
   }
 );
 

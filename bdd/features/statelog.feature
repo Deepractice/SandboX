@@ -11,6 +11,7 @@ Feature: StateLog Integration
       | env.set     |           |                 | NODE_ENV | production |
       | storage.set |           |                 | version  | 1.0.0      |
     When I create sandbox with the StateLog
+    And I call init to complete async initialization
     Then file "test.json" should exist
     And environment variable "NODE_ENV" should be "production"
     And storage item "version" should be "1.0.0"

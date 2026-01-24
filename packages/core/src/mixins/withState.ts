@@ -6,6 +6,7 @@ import type { Sandbox, SandboxConfig, SandboxConstructor } from "../types.js";
 import {
   createState,
   replayStateLogSync,
+  replayStateLogFs,
   type FileSystem,
   type Environment,
   type Storage,
@@ -24,6 +25,8 @@ export function withState<T extends Sandbox>(
     env: Environment;
     storage: Storage;
     private stateLog?: StateLog;
+    private initializeLog?: StateLog;
+    private initialized = false;
 
     constructor(config: SandboxConfig) {
       super(config);
@@ -44,9 +47,24 @@ export function withState<T extends Sandbox>(
       this.storage = state.storage;
       this.stateLog = state.stateLog;
 
-      // Replay initializeLog if provided (sync version for constructor)
+      // Save initializeLog for async init
       if (stateConfig?.initializeLog) {
+        this.initializeLog = stateConfig.initializeLog;
+        // Replay sync operations (env, storage) immediately
         replayStateLogSync(stateConfig.initializeLog, this as unknown as WithState);
+      }
+    }
+
+    /**
+     * Initialize async state operations (fs)
+     * Call this after construction if initializeLog contains fs operations
+     */
+    async init(): Promise<void> {
+      if (this.initialized) return;
+      this.initialized = true;
+
+      if (this.initializeLog) {
+        await replayStateLogFs(this.initializeLog, this as unknown as WithState);
       }
     }
 

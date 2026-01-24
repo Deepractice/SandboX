@@ -10,7 +10,7 @@ export { StateStorage } from "./StateStorage.js";
 
 // StateLog (functional API)
 export { buildStateLog, loadStateLog } from "./StateLog.js";
-export { replayStateLog, replayStateLogSync } from "./replayStateLog.js";
+export { replayStateLog, replayStateLogSync, replayStateLogFs } from "./replayStateLog.js";
 export { createState, type CreateStateOptions, type StateResult } from "./createState.js";
 
 // Persistence

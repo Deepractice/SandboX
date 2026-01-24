@@ -3,11 +3,17 @@
  */
 
 import { Given, After, setWorldConstructor } from "@cucumber/cucumber";
-import { createSandbox, type NodeSandbox, type ExecuteResult } from "sandboxxjs";
+import {
+  createSandbox,
+  type NodeSandbox,
+  type ExecuteResult,
+  type EvaluateResult,
+} from "sandboxxjs";
 
 export class SandboxWorld {
   sandbox?: NodeSandbox;
   executeResult?: ExecuteResult;
+  evaluateResult?: EvaluateResult;
   executeError?: Error;
   fileContent?: string;
 }

@@ -26,6 +26,16 @@ When("I execute code {string}", async function (this: SandboxWorld, code: string
   }
 });
 
+When("I evaluate expression {string}", async function (this: SandboxWorld, expr: string) {
+  try {
+    this.evaluateResult = await this.sandbox!.evaluate(expr);
+    this.executeError = undefined;
+  } catch (error) {
+    this.executeError = error as Error;
+    this.evaluateResult = undefined;
+  }
+});
+
 When(
   "I execute code {string} with timeout {int}",
   async function (this: SandboxWorld, code: string, timeout: number) {
@@ -81,6 +91,23 @@ Then("the execution should succeed", function (this: SandboxWorld) {
 Then("the execution should fail", function (this: SandboxWorld) {
   assert.ok(this.executeResult, "Expected execution result");
   assert.equal(this.executeResult.success, false, "Expected execution to fail");
+});
+
+Then("the execution should throw an error", function (this: SandboxWorld) {
+  assert.ok(this.executeError, "Expected execution to throw an error");
+});
+
+Then("the error message should contain {string}", function (this: SandboxWorld, expected: string) {
+  assert.ok(this.executeError, "Expected an error");
+  assert.ok(
+    this.executeError.message.includes(expected),
+    `Expected error message to contain "${expected}", got "${this.executeError.message}"`
+  );
+});
+
+Then("the evaluation should return {string}", function (this: SandboxWorld, expected: string) {
+  assert.ok(this.evaluateResult, "Expected evaluation result");
+  assert.equal(this.evaluateResult.value, expected, `Expected value "${expected}"`);
 });
 
 Then("the execution should timeout", function (this: SandboxWorld) {

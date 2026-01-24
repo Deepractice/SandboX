@@ -14,8 +14,8 @@ Feature: Code Execution
   Scenario: Execute code with error
     Given I create a sandbox with "node" runtime and "local" isolator
     When I execute code "throw new Error('Test error')"
-    Then the execution should fail
-    And the stderr should contain "Error: Test error"
+    Then the execution should throw an error
+    And the error message should contain "Test error"
 
   @execute
   Scenario: Execute code with timeout
@@ -57,3 +57,28 @@ Feature: Code Execution
     When I run shell command "echo 'test' | wc -l"
     Then the execution should succeed
     And the stdout should contain "1"
+
+  @execute @evaluate
+  Scenario: Evaluate Node.js expression
+    Given I create a sandbox with "node" runtime and "local" isolator
+    When I evaluate expression "1 + 1"
+    Then the evaluation should return "2"
+
+  @execute @evaluate
+  Scenario: Evaluate expression with array
+    Given I create a sandbox with "node" runtime and "local" isolator
+    When I evaluate expression "[1,2,3].map(x => x * 2)"
+    Then the evaluation should return "[ 2, 4, 6 ]"
+
+  @execute @evaluate
+  Scenario: Evaluate expression with error
+    Given I create a sandbox with "node" runtime and "local" isolator
+    When I evaluate expression "throw new Error('eval error')"
+    Then the execution should throw an error
+    And the error message should contain "eval error"
+
+  @execute @evaluate @python
+  Scenario: Evaluate Python expression
+    Given I create a sandbox with "python" runtime and "local" isolator
+    When I evaluate expression "1 + 1"
+    Then the evaluation should return "2"

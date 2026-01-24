@@ -69,7 +69,7 @@ export type StateLog = {
     clear(): StateLog;
   };
   getEntries(): StateLogEntry[];
-  toJSON(): string;
+  toJSON(): StateLogEntry[];
   compact(): StateLog;
 };
 
@@ -85,5 +85,7 @@ export interface WithState {
   fs: FileSystem;
   env: Environment;
   storage: Storage;
+  /** Initialize async state operations (fs). Call after construction if initializeLog has fs ops. */
+  init(): Promise<void>;
   getStateLog?(): StateLog;
 }

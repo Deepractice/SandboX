@@ -50,7 +50,7 @@ Given(
 );
 
 // Create sandbox with StateLog
-When("I create sandbox with the StateLog", async function (this: StateLogWorld) {
+When("I create sandbox with the StateLog", function (this: StateLogWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
     isolator: "local",
@@ -58,9 +58,13 @@ When("I create sandbox with the StateLog", async function (this: StateLogWorld) 
       initializeLog: this.builtStateLog!,
     },
   }) as NodeSandbox;
+  // Sync operations (env, storage) are applied immediately
+  // For fs operations, call init() separately
+});
 
-  // Wait for replay to complete (since it's async)
-  await new Promise((resolve) => setTimeout(resolve, 100));
+// Complete async initialization
+When("I call init to complete async initialization", async function (this: StateLogWorld) {
+  await (this.sandbox as NodeSandbox).init();
 });
 
 // Create sandbox with recording enabled
@@ -94,7 +98,8 @@ Then(
 // Serialization
 When("I export the StateLog as JSON", function (this: StateLogWorld) {
   const log = (this.sandbox as any).getStateLog();
-  this.exportedJSON = log.toJSON();
+  // toJSON() now returns array, JSON.stringify for string
+  this.exportedJSON = JSON.stringify(log.toJSON());
 });
 
 Then("the JSON should be valid", function (this: StateLogWorld) {
@@ -103,6 +108,7 @@ Then("the JSON should be valid", function (this: StateLogWorld) {
 });
 
 Then("loading the JSON should restore the StateLog", function (this: StateLogWorld) {
+  // loadStateLog accepts both string and array
   const restored = loadStateLog(this.exportedJSON!);
   const entries = restored.getEntries();
   assert.ok(entries.length > 0, "Restored log should have entries");
