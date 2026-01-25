@@ -1,6 +1,6 @@
 {
   "name": "@sandboxxjs/cloudflare-isolator",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Cloudflare Container Isolator - Docker-based code execution server",
   "keywords": [
     "sandbox",

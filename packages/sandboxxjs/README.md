@@ -15,7 +15,7 @@ import { createSandbox } from "@sandboxxjs/sandbox";
 
 const sandbox = createSandbox({
   runtime: "node",
-  isolator: "local",
+  isolator: "none",
 });
 
 const result = await sandbox.execute({
@@ -29,20 +29,23 @@ console.log(result.stdout); // "Hello World"
 
 ```typescript
 // Node.js
-const sandbox = createSandbox({ runtime: "node", isolator: "local" });
+const sandbox = createSandbox({ runtime: "node", isolator: "none" });
 
 // Python
-const sandbox = createSandbox({ runtime: "python", isolator: "local" });
+const sandbox = createSandbox({ runtime: "python", isolator: "none" });
 
 // Bash
-const sandbox = createSandbox({ runtime: "bash", isolator: "local" });
+const sandbox = createSandbox({ runtime: "bash", isolator: "none" });
 ```
 
 ## Isolators
 
 ```typescript
-// Local (child_process)
-createSandbox({ isolator: "local" });
+// None (child_process, no isolation)
+createSandbox({ isolator: "none" });
+
+// SRT (OS-level sandbox via Seatbelt/bubblewrap)
+createSandbox({ isolator: "srt" });
 
 // Cloudflare (Docker via binary)
 createSandbox({ isolator: "cloudflare" });
@@ -64,7 +67,7 @@ const files = await sandbox.fs.list("/tmp");
 ```typescript
 const sandbox = createSandbox({
   runtime: "node",
-  isolator: "local",
+  isolator: "none",
   limits: {
     timeout: 30000,
     memory: 128 * 1024 * 1024,

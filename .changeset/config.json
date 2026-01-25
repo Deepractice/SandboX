@@ -3,7 +3,13 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [
-    ["sandboxxjs", "@sandboxxjs/core", "@sandboxxjs/cli", "@sandboxxjs/cloudflare-isolator"]
+    [
+      "sandboxxjs",
+      "@sandboxxjs/core",
+      "@sandboxxjs/state",
+      "@sandboxxjs/cli",
+      "@sandboxxjs/cloudflare-isolator"
+    ]
   ],
   "linked": [],
   "access": "public",

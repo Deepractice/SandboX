@@ -1,5 +1,11 @@
 # @sandboxxjs/state
 
+## 0.5.1
+
+### Patch Changes
+
+- fix: add @sandboxxjs/state to fixed version group and sync versions
+
 ## 0.4.0
 
 ### Minor Changes
