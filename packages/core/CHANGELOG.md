@@ -1,5 +1,63 @@
 # @sandboxxjs/core
 
+## 0.5.0
+
+### Minor Changes
+
+- c374b9e: Add evaluate() API for REPL-style expression evaluation
+  - `evaluate(expr)`: Returns expression value (uses `node -p` / Python `eval()`)
+  - `execute(code)`: Executes script, returns stdout (existing behavior)
+
+  This provides clearer semantics:
+  - Use `evaluate("1 + 1")` when you need the return value
+  - Use `execute("console.log('hello')")` when running scripts
+
+- b1ed09d: Add init() method for async state initialization
+  - Add `sandbox.init()` method to complete async fs operations from initializeLog
+  - Sync operations (env, storage) are applied immediately in constructor
+  - Add `replayStateLogFs()` for replaying only fs operations
+  - Update BDD tests to use init() instead of setTimeout hack
+  - Add BDD tests for evaluate() API
+
+- 95ee754: Refactor Isolator architecture: Runtime/Isolator separation
+
+  Breaking changes:
+  - Rename `local` isolator to `none`
+  - Remove `shell` runtime type (use `shell()` method instead)
+  - Remove `docker` isolator type
+  - CloudflareIsolator API: add `mode` parameter ("shell" | "execute" | "evaluate")
+
+  New features:
+  - Add `SrtIsolator` for OS-level isolation via @anthropic-ai/sandbox-runtime
+  - Isolator now has `execute()` and `evaluate()` methods
+  - Each Isolator handles runtime-specific execution internally
+  - SRT features: network blocking, filesystem restrictions, dependency checks
+
+  API changes:
+  - `IsolatorType`: "none" | "srt" | "cloudflare" | "e2b"
+  - `RuntimeType`: "node" | "python"
+  - `sandbox.shell()` available for all runtimes
+  - `sandbox.execute()` and `sandbox.evaluate()` based on runtime
+
+  Dependencies:
+  - SRT requires: ripgrep (brew install ripgrep on macOS)
+  - CloudflareIsolator requires: Docker
+
+### Patch Changes
+
+- 1b8b144: Fix execute() error handling and state restore issues
+  - execute() now throws ExecutionError on failure (Node.js and Python)
+  - Fix buildStateLog().storage.set() not restoring correctly
+    - Added replayStateLogSync() for synchronous replay in constructors
+  - Fix stateLog.toJSON() to return array instead of string
+    - loadStateLog() now accepts both string and array
+
+- Updated dependencies [b1ed09d]
+- Updated dependencies [1b8b144]
+- Updated dependencies [95ee754]
+  - @sandboxxjs/state@0.4.0
+  - @sandboxxjs/cloudflare-isolator@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
