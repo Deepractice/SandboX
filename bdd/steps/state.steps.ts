@@ -4,7 +4,7 @@
 
 import { Given, When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "assert";
-import { createSandbox, type NodeSandbox } from "sandboxxjs";
+import { createSandbox, type StateSandbox, type RuntimeType, type IsolatorType } from "sandboxxjs";
 import type { SandboxWorld } from "./common.steps.js";
 
 // Environment variable steps
@@ -93,11 +93,11 @@ Given(
   function (this: SandboxWorld, runtime: string, isolator: string, envStr: string) {
     const [key, value] = envStr.split("=");
     this.sandbox = createSandbox({
-      runtime: runtime as "shell" | "node" | "python",
-      isolator: isolator as "local" | "cloudflare" | "e2b" | "docker",
+      runtime: runtime as RuntimeType,
+      isolator: isolator as IsolatorType,
       state: {
         env: { [key]: value },
       },
-    }) as NodeSandbox;
+    });
   }
 );

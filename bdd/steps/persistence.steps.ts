@@ -8,7 +8,7 @@ import {
   createSandbox,
   buildStateLog,
   loadStateLog,
-  type NodeSandbox,
+  type StateSandbox,
   type StateLog,
 } from "sandboxxjs";
 import { createStateStore, type StateStore } from "@sandboxxjs/state";
@@ -82,14 +82,14 @@ When(
 
     this.sandbox = createSandbox({
       runtime: "node",
-      isolator: "local",
+      isolator: "noop",
       state: {
         initializeLog: restoredLog,
       },
-    }) as NodeSandbox;
+    });
 
     // Complete async fs initialization
-    await (this.sandbox as NodeSandbox).init();
+    await (this.sandbox as StateSandbox).init();
   }
 );
 
@@ -118,11 +118,11 @@ Then("the ID should match pattern {string}", function (this: PersistenceWorld, p
 Given("I create a sandbox with enableRecord true", function (this: PersistenceWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "local",
+    isolator: "noop",
     state: {
       enableRecord: true,
     },
-  }) as NodeSandbox;
+  });
   this.sandboxId = (this.sandbox as any).id;
 });
 
@@ -172,12 +172,12 @@ Given(
   function (this: PersistenceWorld, storeType: string) {
     this.sandbox = createSandbox({
       runtime: "node",
-      isolator: "local",
+      isolator: "noop",
       state: {
         enableRecord: true,
         store: storeType as "resourcex" | "memory",
       },
-    }) as NodeSandbox;
+    });
     this.sandboxId = (this.sandbox as any).id;
   }
 );

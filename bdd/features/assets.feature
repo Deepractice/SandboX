@@ -4,7 +4,7 @@ Feature: Binary File Transfer
   So that I can work with images, archives, and other binary data
 
   Background:
-    Given I create a sandbox with "node" runtime and "local" isolator
+    Given I create a sandbox with "node" runtime and "noop" isolator
 
   @assets @upload
   Scenario: Upload binary file to sandbox

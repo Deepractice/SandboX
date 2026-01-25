@@ -8,7 +8,7 @@ import {
   createSandbox,
   buildStateLog,
   loadStateLog,
-  type NodeSandbox,
+  type StateSandbox,
   type StateLog,
 } from "sandboxxjs";
 import type { SandboxWorld } from "./common.steps.js";
@@ -53,29 +53,29 @@ Given(
 When("I create sandbox with the StateLog", function (this: StateLogWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "local",
+    isolator: "noop",
     state: {
       initializeLog: this.builtStateLog!,
     },
-  }) as NodeSandbox;
+  });
   // Sync operations (env, storage) are applied immediately
   // For fs operations, call init() separately
 });
 
 // Complete async initialization
 When("I call init to complete async initialization", async function (this: StateLogWorld) {
-  await (this.sandbox as NodeSandbox).init();
+  await (this.sandbox as StateSandbox).init();
 });
 
 // Create sandbox with recording enabled
 Given("I create a sandbox with state recording enabled", function (this: StateLogWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "local",
+    isolator: "noop",
     state: {
       enableRecord: true,
     },
-  }) as NodeSandbox;
+  });
 });
 
 // Check StateLog entries

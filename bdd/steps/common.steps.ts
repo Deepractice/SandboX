@@ -5,13 +5,15 @@
 import { Given, After, setWorldConstructor } from "@cucumber/cucumber";
 import {
   createSandbox,
-  type NodeSandbox,
+  type StateSandbox,
   type ExecuteResult,
   type EvaluateResult,
+  type RuntimeType,
+  type IsolatorType,
 } from "sandboxxjs";
 
 export class SandboxWorld {
-  sandbox?: NodeSandbox;
+  sandbox?: StateSandbox;
   executeResult?: ExecuteResult;
   evaluateResult?: EvaluateResult;
   executeError?: Error;
@@ -24,9 +26,9 @@ Given(
   "I create a sandbox with {string} runtime and {string} isolator",
   function (this: SandboxWorld, runtime: string, isolator: string) {
     this.sandbox = createSandbox({
-      runtime: runtime as "shell" | "node" | "python",
-      isolator: isolator as "local" | "cloudflare" | "e2b" | "docker",
-    }) as NodeSandbox;
+      runtime: runtime as RuntimeType,
+      isolator: isolator as IsolatorType,
+    });
   }
 );
 

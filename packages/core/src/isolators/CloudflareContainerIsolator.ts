@@ -1,13 +1,13 @@
 /**
  * Cloudflare Container Isolator
- * Manages cloudflare-isolator binary and forwards execution requests
+ * Manages cloudflare-isolator service and forwards execution requests
  */
 
 import { spawn, type ChildProcess } from "child_process";
 import { createServer } from "net";
 import { createRequire } from "module";
-import { Isolator, type ShellOptions } from "./Isolator.js";
-import type { ShellResult } from "../types.js";
+import { Isolator, type IsolatorOptions } from "./Isolator.js";
+import type { ShellResult, ExecuteResult, EvaluateResult, RuntimeType } from "../types.js";
 import { ExecutionError, FileSystemError } from "../errors.js";
 
 const require = createRequire(import.meta.url);
@@ -17,8 +17,8 @@ export class CloudflareContainerIsolator extends Isolator {
   private serverUrl?: string;
   private isReady = false;
 
-  constructor() {
-    super();
+  constructor(runtime: RuntimeType) {
+    super(runtime);
   }
 
   /**
@@ -40,7 +40,6 @@ export class CloudflareContainerIsolator extends Isolator {
    */
   private getBinaryPath(): string {
     try {
-      // Resolve the cli.js from @sandboxxjs/cloudflare-isolator package
       return require.resolve("@sandboxxjs/cloudflare-isolator");
     } catch {
       throw new ExecutionError("@sandboxxjs/cloudflare-isolator not found. Run: bun install");
@@ -71,29 +70,24 @@ export class CloudflareContainerIsolator extends Isolator {
   private async ensureServerRunning(): Promise<void> {
     if (this.isReady) return;
 
-    // Find free port
     const port = await this.findFreePort();
     this.serverUrl = `http://localhost:${port}`;
 
-    // Get binary path (cli.js)
     const cliPath = this.getBinaryPath();
 
-    // Start server via cli.js
     this.serverProcess = spawn("node", [cliPath], {
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, PORT: String(port) },
     });
 
-    // Log output for debugging (optional)
-    this.serverProcess.stdout?.on("data", (_data) => {
-      // Silently consume or log if needed
+    this.serverProcess.stdout?.on("data", () => {
+      // Silently consume
     });
 
     this.serverProcess.stderr?.on("data", (data) => {
-      console.error(`[server] ${data.toString().trim()}`);
+      console.error(`[cloudflare-isolator] ${data.toString().trim()}`);
     });
 
-    // Wait for server to be ready
     await this.waitForReady(this.serverUrl);
     this.isReady = true;
   }
@@ -101,21 +95,67 @@ export class CloudflareContainerIsolator extends Isolator {
   /**
    * Execute shell command
    */
-  async shell(command: string, options: ShellOptions = {}): Promise<ShellResult> {
+  async shell(command: string, options: IsolatorOptions = {}): Promise<ShellResult> {
     const { timeout = 30000, env = {} } = options;
+    return this.callServer(command, "shell", timeout, env);
+  }
+
+  /**
+   * Execute code (script mode)
+   */
+  async execute(code: string, options: IsolatorOptions = {}): Promise<ExecuteResult> {
+    const { timeout = 30000, env = {} } = options;
+    const result = await this.callServer(code, "execute", timeout, env);
+
+    if (!result.success) {
+      throw new ExecutionError(
+        result.stderr || `Execution failed with exit code ${result.exitCode}`
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Evaluate expression (REPL mode)
+   */
+  async evaluate(expr: string, options: IsolatorOptions = {}): Promise<EvaluateResult> {
+    const { timeout = 30000, env = {} } = options;
+    const result = await this.callServer(expr, "evaluate", timeout, env);
+
+    if (!result.success) {
+      throw new ExecutionError(
+        result.stderr || `Evaluation failed with exit code ${result.exitCode}`
+      );
+    }
+
+    return {
+      value: result.stdout.trim(),
+      executionTime: result.executionTime,
+    };
+  }
+
+  /**
+   * Call server to execute command
+   */
+  private async callServer(
+    code: string,
+    mode: "shell" | "execute" | "evaluate",
+    timeout: number,
+    env: Record<string, string>
+  ): Promise<ShellResult> {
     const startTime = Date.now();
 
-    // Ensure server is running
     await this.ensureServerRunning();
 
     try {
-      // Call server to execute shell command
       const response = await fetch(`${this.serverUrl}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: command,
-          runtime: "bash",
+          code,
+          mode,
+          runtime: this.runtime,
           env,
           timeout,
         }),
@@ -141,7 +181,8 @@ export class CloudflareContainerIsolator extends Isolator {
         executionTime: Date.now() - startTime,
       };
     } catch (error) {
-      throw new ExecutionError(`Shell execution failed: ${(error as Error).message}`);
+      if (error instanceof ExecutionError) throw error;
+      throw new ExecutionError(`Server call failed: ${(error as Error).message}`);
     }
   }
 

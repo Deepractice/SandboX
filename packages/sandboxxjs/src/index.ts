@@ -10,6 +10,10 @@ export { SandboxManager } from "./SandboxManager.js";
 export {
   // Classes
   BaseSandbox,
+  // Isolators
+  NoopIsolator,
+  SrtIsolator,
+  CloudflareContainerIsolator,
   // State implementations
   StateFS,
   StateEnv,
@@ -20,13 +24,11 @@ export {
   type StateLogEntry,
   // Mixins
   withState,
-  withNodeExecute,
-  withPythonExecute,
   // Types
   type Sandbox,
   type SandboxConfig,
   type StateConfig,
-  type Runtime,
+  type RuntimeType,
   type IsolatorType,
   type ShellResult,
   type ExecuteResult,
@@ -38,10 +40,6 @@ export {
   type NodeConfig,
   type PythonConfig,
   type WithState,
-  type WithExecute,
-  type WithEvaluate,
-  type NodeSandbox,
-  type PythonSandbox,
   type StateSandbox,
   // Errors
   SandboxError,

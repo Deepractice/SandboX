@@ -8,7 +8,8 @@ export { BaseSandbox } from "./Sandbox.js";
 
 // Isolators
 export { Isolator } from "./isolators/Isolator.js";
-export { LocalIsolator } from "./isolators/LocalIsolator.js";
+export { NoopIsolator } from "./isolators/NoopIsolator.js";
+export { SrtIsolator } from "./isolators/SrtIsolator.js";
 export { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
 
 // Re-export from @sandboxxjs/state
@@ -30,8 +31,6 @@ export {
 
 // Mixins
 export { withState } from "./mixins/withState.js";
-export { withNodeExecute } from "./mixins/withNodeExecute.js";
-export { withPythonExecute } from "./mixins/withPythonExecute.js";
 
 // Types
 export * from "./types.js";

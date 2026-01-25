@@ -8,8 +8,8 @@ import type { WithState, StateLog } from "@sandboxxjs/state";
 // Configuration Types
 // ============================================
 
-export type IsolatorType = "local" | "cloudflare" | "e2b" | "docker";
-export type Runtime = "shell" | "node" | "python";
+export type IsolatorType = "noop" | "srt" | "cloudflare" | "e2b";
+export type RuntimeType = "node" | "python";
 
 export interface StateConfig {
   /** Simple environment variable initialization */
@@ -29,8 +29,8 @@ export interface SandboxConfig {
   /** Isolator type */
   isolator: IsolatorType;
 
-  /** Runtime type (default: shell) */
-  runtime?: Runtime;
+  /** Runtime type */
+  runtime: RuntimeType;
 
   /** Resource limits */
   limits?: ResourceLimits;
@@ -73,7 +73,7 @@ export interface PythonConfig {
 // ============================================
 
 /**
- * Base Sandbox interface - 4 core APIs + ID
+ * Base Sandbox interface - core APIs
  */
 export interface Sandbox {
   /** Unique sandbox ID */
@@ -81,6 +81,12 @@ export interface Sandbox {
 
   /** Execute shell command */
   shell(command: string): Promise<ShellResult>;
+
+  /** Execute code (script mode - stdout) */
+  execute(code: string): Promise<ExecuteResult>;
+
+  /** Evaluate expression (REPL mode - return value) */
+  evaluate(expr: string): Promise<EvaluateResult>;
 
   /** Upload file to sandbox */
   upload(data: Buffer, remotePath: string): Promise<void>;
@@ -108,17 +114,9 @@ export interface ShellResult {
   executionTime: number;
 }
 
-// ============================================
-// Mixin Capability Interfaces
-// ============================================
-
 /**
- * Code execution capability (script mode - stdout)
+ * Code execution result (same as ShellResult)
  */
-export interface WithExecute {
-  execute(code: string): Promise<ExecuteResult>;
-}
-
 export interface ExecuteResult {
   /** Whether execution succeeded */
   success: boolean;
@@ -133,12 +131,8 @@ export interface ExecuteResult {
 }
 
 /**
- * Expression evaluation capability (REPL mode - return value)
+ * Expression evaluation result
  */
-export interface WithEvaluate {
-  evaluate(expr: string): Promise<EvaluateResult>;
-}
-
 export interface EvaluateResult {
   /** Expression result value (as string) */
   value: string;
@@ -150,23 +144,12 @@ export interface EvaluateResult {
 // Composed Types
 // ============================================
 
-/** Node sandbox = Base + State + Execute + Evaluate */
-export type NodeSandbox = Sandbox & WithState & WithExecute & WithEvaluate;
-
-/** Python sandbox = Base + State + Execute + Evaluate */
-export type PythonSandbox = Sandbox & WithState & WithExecute & WithEvaluate;
-
-/** Sandbox with State only */
+/** Sandbox with State (fs, env, storage) */
 export type StateSandbox = Sandbox & WithState;
 
 // ============================================
-// Mixin Constructor Types
+// Constructor Types
 // ============================================
 
 /** Sandbox constructor type */
 export type SandboxConstructor<T extends Sandbox = Sandbox> = new (config: SandboxConfig) => T;
-
-/** Mixin function type */
-export type SandboxMixin<T extends Sandbox, U> = (
-  Base: SandboxConstructor<T>
-) => SandboxConstructor<T & U>;
