@@ -3,7 +3,7 @@
  * CLI for SandboX
  */
 
-import { createSandbox, type NodeSandbox, type PythonSandbox } from "sandboxxjs";
+import { createSandbox } from "sandboxxjs";
 import * as fs from "fs/promises";
 
 const args = process.argv.slice(2);
@@ -47,19 +47,18 @@ async function runCommand(args: string[]) {
     process.exit(1);
   }
 
-  if (!["bash", "node", "python", "docker"].includes(runtime)) {
+  if (!["bash", "node", "python"].includes(runtime)) {
     console.error(`Invalid runtime: ${runtime}`);
-    console.error("Valid runtimes: bash, node, python, docker");
+    console.error("Valid runtimes: bash, node, python");
     process.exit(1);
   }
 
   try {
     const code = await fs.readFile(filePath, "utf-8");
 
-    const runtimeType = runtime === "bash" ? "shell" : runtime;
-
-    if (runtimeType === "shell") {
-      const sandbox = createSandbox({ isolator: "local" });
+    // For bash, use node runtime with shell() method
+    if (runtime === "bash") {
+      const sandbox = createSandbox({ runtime: "node", isolator: "none" });
       console.log(`Running ${filePath} with shell...`);
       const result = await sandbox.shell(`sh ${filePath}`);
 
@@ -76,49 +75,26 @@ async function runCommand(args: string[]) {
       return;
     }
 
+    // For node/python, use execute()
     console.log(`Running ${filePath} with ${runtime} runtime...`);
 
-    if (runtimeType === "node") {
-      const sandbox = createSandbox({
-        runtime: "node",
-        isolator: "local",
-      }) as NodeSandbox;
+    const sandbox = createSandbox({
+      runtime: runtime as "node" | "python",
+      isolator: "none",
+    });
 
-      const result = await sandbox.execute(code);
+    const result = await sandbox.execute(code);
 
-      if (result.success) {
-        console.log("\nOutput:");
-        if (result.stdout) console.log(result.stdout);
-      } else {
-        console.error("\nError:");
-        if (result.stderr) console.error(result.stderr);
-        process.exit(result.exitCode || 1);
-      }
-
-      await sandbox.destroy();
-      return;
+    if (result.success) {
+      console.log("\nOutput:");
+      if (result.stdout) console.log(result.stdout);
+    } else {
+      console.error("\nError:");
+      if (result.stderr) console.error(result.stderr);
+      process.exit(result.exitCode || 1);
     }
 
-    if (runtimeType === "python") {
-      const sandbox = createSandbox({
-        runtime: "python",
-        isolator: "local",
-      }) as PythonSandbox;
-
-      const result = await sandbox.execute(code);
-
-      if (result.success) {
-        console.log("\nOutput:");
-        if (result.stdout) console.log(result.stdout);
-      } else {
-        console.error("\nError:");
-        if (result.stderr) console.error(result.stderr);
-        process.exit(result.exitCode || 1);
-      }
-
-      await sandbox.destroy();
-      return;
-    }
+    await sandbox.destroy();
   } catch (error) {
     console.error("Failed to run sandbox:", (error as Error).message);
     process.exit(1);
@@ -154,7 +130,6 @@ Runtimes:
   bash      - Bash shell
   node      - Node.js
   python    - Python
-  docker    - Docker container
 
 Examples:
   sandbox run node script.js
