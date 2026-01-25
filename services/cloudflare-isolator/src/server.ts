@@ -6,7 +6,8 @@
 
 interface ExecuteRequest {
   code: string;
-  runtime: string;
+  mode: "shell" | "execute" | "evaluate";
+  runtime: "node" | "python";
   env?: Record<string, string>;
   timeout?: number;
 }
@@ -50,12 +51,12 @@ console.log(`✓ Cloudflare Isolator Server listening on http://localhost:${PORT
  * Execute code using Docker
  */
 async function executeCode(request: ExecuteRequest) {
-  const { code, runtime, env = {}, timeout = 30000 } = request;
+  const { code, mode, runtime, env = {}, timeout = 30000 } = request;
   const startTime = Date.now();
 
   // Build docker command
   const image = getDockerImage(runtime);
-  const command = getCommand(runtime, code);
+  const command = getCommand(mode, runtime, code);
 
   // Build env args
   const envArgs = Object.entries(env).flatMap(([k, v]) => ["-e", `${k}=${v}`]);
@@ -124,28 +125,45 @@ async function executeCode(request: ExecuteRequest) {
   }
 }
 
-function getDockerImage(runtime: string): string {
+function getDockerImage(runtime: "node" | "python"): string {
   switch (runtime) {
     case "node":
       return "node:22-alpine";
     case "python":
-      return "python:3.11-alpine";
-    case "bash":
-      return "alpine:latest";
-    default:
-      return "node:22-alpine";
+      return "python:3.12-alpine";
   }
 }
 
-function getCommand(runtime: string, code: string): string[] {
-  switch (runtime) {
-    case "node":
-      return ["node", "--eval", code];
-    case "python":
-      return ["python3", "-c", code];
-    case "bash":
-      return ["sh", "-c", code];
-    default:
-      return ["node", "--eval", code];
+function getCommand(
+  mode: "shell" | "execute" | "evaluate",
+  runtime: "node" | "python",
+  code: string
+): string[] {
+  // Shell mode - use sh for all runtimes
+  if (mode === "shell") {
+    return ["sh", "-c", code];
   }
+
+  // Execute mode - script execution
+  if (mode === "execute") {
+    switch (runtime) {
+      case "node":
+        return ["node", "-e", code];
+      case "python":
+        return ["python3", "-c", code];
+    }
+  }
+
+  // Evaluate mode - REPL-style evaluation
+  if (mode === "evaluate") {
+    switch (runtime) {
+      case "node":
+        return ["node", "-p", code];
+      case "python":
+        return ["python3", "-c", `print(${code})`];
+    }
+  }
+
+  // Fallback
+  return ["sh", "-c", code];
 }
