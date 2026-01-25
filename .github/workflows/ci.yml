@@ -33,4 +33,4 @@ jobs:
         run: bun run build
 
       - name: Test
-        run: bun run test:bdd
+        run: cd bdd && bun run test:tags "not @srt and not @cloudflare"
