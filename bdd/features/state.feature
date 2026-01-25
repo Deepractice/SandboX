@@ -4,7 +4,7 @@ Feature: State Management
   So that I can configure and persist data across operations
 
   Background:
-    Given I create a sandbox with "node" runtime and "noop" isolator
+    Given I create a sandbox with "node" runtime and "none" isolator
 
   @env
   Scenario: Set and get environment variable
@@ -25,7 +25,7 @@ Feature: State Management
 
   @env
   Scenario: Initialize environment variables from config
-    Given I create a sandbox with "node" runtime and "noop" isolator and env "INIT_VAR=init_value"
+    Given I create a sandbox with "node" runtime and "none" isolator and env "INIT_VAR=init_value"
     Then environment variable "INIT_VAR" should be "init_value"
 
   @env

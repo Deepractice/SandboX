@@ -11,7 +11,7 @@ import type {
   EvaluateResult,
 } from "./types.js";
 import { Isolator } from "./isolators/Isolator.js";
-import { NoopIsolator } from "./isolators/NoopIsolator.js";
+import { NoneIsolator } from "./isolators/NoneIsolator.js";
 import { SrtIsolator } from "./isolators/SrtIsolator.js";
 import { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
 import { SandboxError } from "./errors.js";
@@ -31,8 +31,8 @@ export class BaseSandbox implements ISandbox {
     const { isolator: isolatorType, runtime } = config;
 
     switch (isolatorType) {
-      case "noop":
-        return new NoopIsolator(runtime);
+      case "none":
+        return new NoneIsolator(runtime);
       case "srt":
         return new SrtIsolator(runtime);
       case "cloudflare":

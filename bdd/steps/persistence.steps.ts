@@ -82,7 +82,7 @@ When(
 
     this.sandbox = createSandbox({
       runtime: "node",
-      isolator: "noop",
+      isolator: "none",
       state: {
         initializeLog: restoredLog,
       },
@@ -118,7 +118,7 @@ Then("the ID should match pattern {string}", function (this: PersistenceWorld, p
 Given("I create a sandbox with enableRecord true", function (this: PersistenceWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "noop",
+    isolator: "none",
     state: {
       enableRecord: true,
     },
@@ -172,7 +172,7 @@ Given(
   function (this: PersistenceWorld, storeType: string) {
     this.sandbox = createSandbox({
       runtime: "node",
-      isolator: "noop",
+      isolator: "none",
       state: {
         enableRecord: true,
         store: storeType as "resourcex" | "memory",

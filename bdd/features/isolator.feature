@@ -4,7 +4,7 @@ Feature: Isolator Architecture
   So that I can choose the right level of isolation for my use case
 
   # Isolator types:
-  # - noop: No isolation, direct execution (for development/testing)
+  # - none: No isolation, direct execution (for development/testing)
   # - srt: OS-level isolation via sandbox-runtime (Seatbelt/bubblewrap)
   # - cloudflare: Cloudflare Workers isolation
   # - e2b: E2B cloud sandbox
@@ -14,39 +14,39 @@ Feature: Isolator Architecture
   # - python: Python execution
 
   # ============================================
-  # Noop Isolator (formerly "local")
+  # Noop Isolator (no isolation)
   # ============================================
 
-  @isolator @noop
-  Scenario: Noop isolator with node runtime - shell
-    Given I create a sandbox with "node" runtime and "noop" isolator
+  @isolator @none
+  Scenario: None isolator with node runtime - shell
+    Given I create a sandbox with "node" runtime and "none" isolator
     When I run shell command "echo hello"
     Then the execution should succeed
     And the stdout should contain "hello"
 
-  @isolator @noop
-  Scenario: Noop isolator with node runtime - execute
-    Given I create a sandbox with "node" runtime and "noop" isolator
+  @isolator @none
+  Scenario: None isolator with node runtime - execute
+    Given I create a sandbox with "node" runtime and "none" isolator
     When I execute code "console.log('noop-node')"
     Then the execution should succeed
     And the stdout should contain "noop-node"
 
-  @isolator @noop
-  Scenario: Noop isolator with node runtime - evaluate
-    Given I create a sandbox with "node" runtime and "noop" isolator
+  @isolator @none
+  Scenario: None isolator with node runtime - evaluate
+    Given I create a sandbox with "node" runtime and "none" isolator
     When I evaluate expression "2 + 2"
     Then the evaluation should return "4"
 
-  @isolator @noop
-  Scenario: Noop isolator with python runtime - execute
-    Given I create a sandbox with "python" runtime and "noop" isolator
+  @isolator @none
+  Scenario: None isolator with python runtime - execute
+    Given I create a sandbox with "python" runtime and "none" isolator
     When I execute code "print('noop-python')"
     Then the execution should succeed
     And the stdout should contain "noop-python"
 
-  @isolator @noop
-  Scenario: Noop isolator with python runtime - evaluate
-    Given I create a sandbox with "python" runtime and "noop" isolator
+  @isolator @none
+  Scenario: None isolator with python runtime - evaluate
+    Given I create a sandbox with "python" runtime and "none" isolator
     When I evaluate expression "3 * 3"
     Then the evaluation should return "9"
 

@@ -11,7 +11,7 @@ export {
   // Classes
   BaseSandbox,
   // Isolators
-  NoopIsolator,
+  NoneIsolator,
   SrtIsolator,
   CloudflareContainerIsolator,
   // State implementations

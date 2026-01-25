@@ -48,7 +48,7 @@ const result = await cloudflare.containers.run("node script.js");
 import { createSandbox } from "sandboxxjs";
 
 // Same code, different isolators
-const sandbox = createSandbox({ isolator: "local", runtime: "node" }); // Fast dev
+const sandbox = createSandbox({ isolator: "none", runtime: "node" }); // Fast dev
 const sandbox = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Container (local or edge)
 
 // Execute code
@@ -66,7 +66,7 @@ npm install sandboxxjs
 import { createSandbox } from "sandboxxjs";
 
 const sandbox = createSandbox({
-  isolator: "local",
+  isolator: "none",
   runtime: "node",
 });
 
@@ -99,22 +99,22 @@ await sandbox.destroy();
 
 ```typescript
 // Node.js
-const nodeSandbox = createSandbox({ isolator: "local", runtime: "node" });
+const nodeSandbox = createSandbox({ isolator: "none", runtime: "node" });
 await nodeSandbox.execute("console.log(process.version)");
 
 // Python
-const pythonSandbox = createSandbox({ isolator: "local", runtime: "python" });
+const pythonSandbox = createSandbox({ isolator: "none", runtime: "python" });
 await pythonSandbox.execute("import sys; print(sys.version)");
 
-// Shell
-const shellSandbox = createSandbox({ isolator: "local" });
-await shellSandbox.shell("echo $SHELL");
+// Shell commands (available for all runtimes)
+await nodeSandbox.shell("echo $SHELL");
+await pythonSandbox.shell("ls -la");
 ```
 
 ### State Layer (fs, env, storage)
 
 ```typescript
-const sandbox = createSandbox({ isolator: "local", runtime: "node" });
+const sandbox = createSandbox({ isolator: "none", runtime: "node" });
 
 // File system operations
 await sandbox.fs.write("/app/data.json", '{"key": "value"}');
@@ -144,7 +144,7 @@ Record all state operations for replay and persistence:
 ```typescript
 // Enable recording
 const sandbox = createSandbox({
-  isolator: "local",
+  isolator: "none",
   runtime: "node",
   state: { enableRecord: true },
 });
@@ -179,7 +179,7 @@ const initLog = buildStateLog()
 
 // Create sandbox with pre-configured state
 const sandbox = createSandbox({
-  isolator: "local",
+  isolator: "none",
   runtime: "node",
   state: { initializeLog: initLog },
 });
@@ -198,7 +198,7 @@ import { loadStateLog } from "sandboxxjs";
 
 // Enable recording (auto-persist)
 const sandbox = createSandbox({
-  isolator: "local",
+  isolator: "none",
   runtime: "node",
   state: { enableRecord: true }, // Auto-persists to disk
 });
@@ -217,7 +217,7 @@ const json = log.toJSON();
 // Restore from JSON
 const restoredLog = loadStateLog(json);
 const newSandbox = createSandbox({
-  isolator: "local",
+  isolator: "none",
   runtime: "node",
   state: { initializeLog: restoredLog },
 });
@@ -269,10 +269,10 @@ createSandbox({ isolator, runtime, state? })
 
 | Isolator       | Status | Isolation Level | Startup Time | Requirements   | Best For             |
 | -------------- | ------ | --------------- | ------------ | -------------- | -------------------- |
-| **local**      | ✅     | Process         | ~10ms        | None           | Development          |
+| **none**       | ✅     | None            | ~10ms        | None           | Development          |
+| **srt**        | ✅     | OS-level        | ~50ms        | ripgrep        | Secure local dev     |
 | **cloudflare** | ✅     | Container       | ~100ms       | Docker (local) | Local + Edge deploy  |
 | **e2b**        | 🚧     | MicroVM         | ~150ms       | E2B account    | Production (Planned) |
-| **docker**     | 🚧     | Container       | ~500ms       | Docker         | Custom (Planned)     |
 
 **Cloudflare Isolator:**
 
@@ -282,7 +282,8 @@ createSandbox({ isolator, runtime, state? })
 
 ```typescript
 // Switch isolator without changing code
-const dev = createSandbox({ isolator: "local", runtime: "node" });
+const dev = createSandbox({ isolator: "none", runtime: "node" });
+const secure = createSandbox({ isolator: "srt", runtime: "node" }); // OS-level isolation
 const cloudflare = createSandbox({ isolator: "cloudflare", runtime: "node" }); // Needs Docker
 // Same API: execute(), fs, env, storage
 ```
@@ -302,10 +303,10 @@ const cloudflare = createSandbox({ isolator: "cloudflare", runtime: "node" }); /
 ```typescript
 interface SandboxConfig {
   // Isolator (required)
-  isolator: "local" | "cloudflare" | "e2b" | "docker";
+  isolator: "none" | "srt" | "cloudflare" | "e2b";
 
-  // Runtime (default: "shell")
-  runtime?: "shell" | "node" | "python";
+  // Runtime (required)
+  runtime: "node" | "python";
 
   // State configuration
   state?: {

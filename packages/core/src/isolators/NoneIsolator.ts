@@ -1,5 +1,5 @@
 /**
- * Noop Isolator - No isolation, direct execution via child_process
+ * None Isolator - No isolation, direct execution via child_process
  * For development and testing purposes
  */
 
@@ -10,7 +10,7 @@ import { Isolator, type IsolatorOptions } from "./Isolator.js";
 import type { ShellResult, ExecuteResult, EvaluateResult, RuntimeType } from "../types.js";
 import { ExecutionError, TimeoutError, FileSystemError } from "../errors.js";
 
-export class NoopIsolator extends Isolator {
+export class NoneIsolator extends Isolator {
   private workDir: string;
 
   constructor(runtime: RuntimeType) {

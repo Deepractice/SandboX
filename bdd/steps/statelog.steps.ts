@@ -53,7 +53,7 @@ Given(
 When("I create sandbox with the StateLog", function (this: StateLogWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "noop",
+    isolator: "none",
     state: {
       initializeLog: this.builtStateLog!,
     },
@@ -71,7 +71,7 @@ When("I call init to complete async initialization", async function (this: State
 Given("I create a sandbox with state recording enabled", function (this: StateLogWorld) {
   this.sandbox = createSandbox({
     runtime: "node",
-    isolator: "noop",
+    isolator: "none",
     state: {
       enableRecord: true,
     },

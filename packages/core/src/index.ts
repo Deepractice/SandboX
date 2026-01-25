@@ -8,7 +8,7 @@ export { BaseSandbox } from "./Sandbox.js";
 
 // Isolators
 export { Isolator } from "./isolators/Isolator.js";
-export { NoopIsolator } from "./isolators/NoopIsolator.js";
+export { NoneIsolator } from "./isolators/NoneIsolator.js";
 export { SrtIsolator } from "./isolators/SrtIsolator.js";
 export { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
 

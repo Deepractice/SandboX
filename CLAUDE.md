@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SandboX is a multi-language secure execution sandbox for AI Agents. It provides isolated execution environments for running untrusted code from AI agents across multiple languages (Shell, Node.js, Python) and multiple isolation strategies (local, Cloudflare, E2B, Docker).
+SandboX is a multi-language secure execution sandbox for AI Agents. It provides isolated execution environments for running untrusted code from AI agents across multiple languages (Shell, Node.js, Python) and multiple isolation strategies (none, srt, Cloudflare, E2B).
 
 ## Development Commands
 
