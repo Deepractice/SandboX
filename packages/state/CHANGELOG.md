@@ -1,5 +1,25 @@
 # @sandboxxjs/state
 
+## 0.4.0
+
+### Minor Changes
+
+- b1ed09d: Add init() method for async state initialization
+  - Add `sandbox.init()` method to complete async fs operations from initializeLog
+  - Sync operations (env, storage) are applied immediately in constructor
+  - Add `replayStateLogFs()` for replaying only fs operations
+  - Update BDD tests to use init() instead of setTimeout hack
+  - Add BDD tests for evaluate() API
+
+### Patch Changes
+
+- 1b8b144: Fix execute() error handling and state restore issues
+  - execute() now throws ExecutionError on failure (Node.js and Python)
+  - Fix buildStateLog().storage.set() not restoring correctly
+    - Added replayStateLogSync() for synchronous replay in constructors
+  - Fix stateLog.toJSON() to return array instead of string
+    - loadStateLog() now accepts both string and array
+
 ## 0.3.0
 
 ### Minor Changes

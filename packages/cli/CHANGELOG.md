@@ -1,5 +1,15 @@
 # @sandboxxjs/cli
 
+## 0.5.0
+
+### Patch Changes
+
+- Updated dependencies [c374b9e]
+- Updated dependencies [b1ed09d]
+- Updated dependencies [1b8b144]
+- Updated dependencies [95ee754]
+  - sandboxxjs@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes
