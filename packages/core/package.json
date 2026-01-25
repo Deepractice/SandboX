@@ -42,6 +42,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "^0.0.32",
     "@sandboxxjs/cloudflare-isolator": "workspace:*",
     "@sandboxxjs/state": "workspace:*",
     "execa": "^9.6.1",

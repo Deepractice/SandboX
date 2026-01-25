@@ -88,9 +88,9 @@ Feature: Isolator Architecture
     Then the evaluation should return "16"
 
   @isolator @srt @isolation
-  Scenario: SRT isolator blocks file access outside workspace
+  Scenario: SRT isolator blocks sensitive file access
     Given I create a sandbox with "node" runtime and "srt" isolator
-    When I run shell command "cat /etc/passwd"
+    When I run shell command "cat ~/.ssh/config"
     Then the execution should fail
 
   # ============================================
