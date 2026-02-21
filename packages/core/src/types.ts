@@ -8,7 +8,7 @@ import type { WithState, StateLog } from "@sandboxxjs/state";
 // Configuration Types
 // ============================================
 
-export type IsolatorType = "none" | "srt" | "cloudflare" | "e2b";
+export type IsolatorType = "none" | "srt" | "cloudflare" | "e2b" | "forge";
 export type RuntimeType = "node" | "python";
 
 export interface StateConfig {

@@ -11,6 +11,7 @@ export { Isolator } from "./isolators/Isolator.js";
 export { NoneIsolator } from "./isolators/NoneIsolator.js";
 export { SrtIsolator } from "./isolators/SrtIsolator.js";
 export { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
+export { ForgeIsolator } from "./isolators/ForgeIsolator.js";
 
 // Re-export from @sandboxxjs/state
 export {

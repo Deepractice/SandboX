@@ -14,6 +14,7 @@ import { Isolator } from "./isolators/Isolator.js";
 import { NoneIsolator } from "./isolators/NoneIsolator.js";
 import { SrtIsolator } from "./isolators/SrtIsolator.js";
 import { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
+import { ForgeIsolator } from "./isolators/ForgeIsolator.js";
 import { SandboxError } from "./errors.js";
 
 export class BaseSandbox implements ISandbox {
@@ -39,6 +40,8 @@ export class BaseSandbox implements ISandbox {
         return new CloudflareContainerIsolator(runtime);
       case "e2b":
         throw new SandboxError(`Isolator "e2b" not yet implemented`);
+      case "forge":
+        return new ForgeIsolator(runtime);
       default:
         throw new SandboxError(`Unknown isolator type: ${isolatorType}`);
     }
