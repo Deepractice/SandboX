@@ -8,23 +8,11 @@ commit-msg:
 
 pre-commit:
   commands:
-    format-fix:
-      glob: "*.{js,ts,json,md,yml,yaml}"
-      run: bun prettier --write {staged_files} && git add {staged_files}
-
-    lint-fix:
-      glob: "*.{js,ts}"
-      run: bun eslint --fix {staged_files} && git add {staged_files}
+    biome:
+      glob: "*.{js,ts,json}"
+      run: bun biome check --write {staged_files} && git add {staged_files}
 
 pre-push:
-  parallel: false
   commands:
-    format:
-      run: bun format:check
-
-    lint:
-      run: bun lint
-
-    install-check:
-      run: bun install --frozen-lockfile
-      fail_text: "Lockfile is outdated. Run 'bun install' to update it."
+    check:
+      run: bun biome check .

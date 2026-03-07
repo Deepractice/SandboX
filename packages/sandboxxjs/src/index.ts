@@ -1,51 +1,12 @@
 /**
- * sandboxjs
- * Secure code execution sandbox for AI agents
+ * sandboxxjs — public API package.
+ *
+ * Re-exports everything from @sandboxxjs/core.
+ * This is the main npm package that users install.
+ *
+ * For platform-specific providers, install separately:
+ *   - @sandboxxjs/node-provider (cloud containers)
+ *   - @sandboxxjs/web-provider (browser WebContainer)
  */
 
-export { createSandbox } from "./createSandbox.js";
-export { SandboxManager } from "./SandboxManager.js";
-
-// Re-export core types and classes
-export {
-  // Classes
-  BaseSandbox,
-  // Isolators
-  NoneIsolator,
-  SrtIsolator,
-  CloudflareContainerIsolator,
-  // State implementations
-  StateFS,
-  StateEnv,
-  StateStorage,
-  buildStateLog,
-  loadStateLog,
-  type StateLog,
-  type StateLogEntry,
-  // Mixins
-  withState,
-  // Types
-  type Sandbox,
-  type SandboxConfig,
-  type StateConfig,
-  type RuntimeType,
-  type IsolatorType,
-  type ShellResult,
-  type ExecuteResult,
-  type EvaluateResult,
-  type FileSystem,
-  type Environment,
-  type Storage,
-  type ResourceLimits,
-  type NodeConfig,
-  type PythonConfig,
-  type WithState,
-  type StateSandbox,
-  // Errors
-  SandboxError,
-  ExecutionError,
-  TimeoutError,
-  IsolationError,
-  FileSystemError,
-  StateError,
-} from "@sandboxxjs/core";
+export * from "@sandboxxjs/core";

@@ -1,13 +1,13 @@
 {
   "name": "sandboxxjs",
-  "version": "0.5.1",
-  "description": "SandboX - Secure code execution sandbox for AI agents",
+  "version": "1.0.0",
+  "description": "Sandbox abstraction framework — unified lifecycle for cloud and browser sandboxes",
   "keywords": [
     "sandbox",
     "execution",
-    "security",
-    "isolation",
-    "ai"
+    "webcontainer",
+    "ai",
+    "agent"
   ],
   "repository": {
     "type": "git",
@@ -24,22 +24,20 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "bun run build.ts",
-    "lint": "eslint .",
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@sandboxxjs/core": "workspace:*"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

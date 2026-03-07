@@ -1,39 +1,45 @@
 /**
- * @sandboxxjs/core
- * Core functionality for secure code execution
+ * @sandboxxjs/core — Sandbox abstraction framework.
+ *
+ * Unified lifecycle for any sandbox environment:
+ *
+ *   Allocate → Prepare → Register → Ready → Command
+ *
+ *   1. Allocator provisions resources, returns SandboxContainer (status: pending)
+ *   2. Sandbox environment starts, sandbox-client prepares
+ *   3. sandbox-client connects to Registry via WebSocket, registers
+ *   4. Registry marks sandbox as ready
+ *   5. Router dispatches commands through Registry to sandbox-client
+ *
+ * Platform differences are injected via SandboxProvider:
+ *   - @sandboxxjs/node-provider: child_process + node:fs
+ *   - @sandboxxjs/web-provider: @webcontainer/api
+ *   - Future: Docker, SSH, WASM, etc.
  */
 
-// Base Sandbox
-export { BaseSandbox } from "./Sandbox.js";
+// Allocator — Step 1: Allocate
+export type {
+  AllocateRequest,
+  SandboxAllocator,
+  SandboxContainer,
+  SandboxContainerType,
+  SandboxStatus,
+} from "./allocator";
 
-// Isolators
-export { Isolator } from "./isolators/Isolator.js";
-export { NoneIsolator } from "./isolators/NoneIsolator.js";
-export { SrtIsolator } from "./isolators/SrtIsolator.js";
-export { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
+// Client — Step 2-3: Prepare + Register
+export type { SandboxClient, SandboxClientOptions } from "./client";
+export { createSandboxClient } from "./create-client";
+// Provider — Platform capability injection
+export type {
+  SandboxExecutor,
+  SandboxFileSystem,
+  SandboxProcessManager,
+  SandboxProvider,
+} from "./provider";
+// Registry — Step 3-4: Register + Ready
+export type { SandboxConnection, SandboxRegistry } from "./registry";
+// Router — Step 5: Command (RPC dispatch)
+export type { SandboxRouter } from "./router";
 
-// Re-export from @sandboxxjs/state
-export {
-  StateFS,
-  StateEnv,
-  StateStorage,
-  buildStateLog,
-  loadStateLog,
-  type StateLog,
-  type StateLogEntry,
-  type FileSystem,
-  type Environment,
-  type Storage,
-  type WithState,
-  StateError,
-  FileSystemError,
-} from "@sandboxxjs/state";
-
-// Mixins
-export { withState } from "./mixins/withState.js";
-
-// Types
-export * from "./types.js";
-
-// Errors
-export * from "./errors.js";
+// Sandbox — Step 5: Command (consumer-facing)
+export type { ExecOptions, ExecResult, FileInfo, ProcessInfo, Sandbox } from "./sandbox";

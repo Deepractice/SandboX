@@ -1,94 +1,52 @@
 /**
- * Base Sandbox class - delegates to Isolator for execution
+ * Sandbox — the unified interface for sandbox operations.
+ *
+ * Step 5 of the lifecycle: Command.
+ *
+ * Consumers get a Sandbox instance and operate on it.
+ * They never need to know if it's a cloud container, a browser WebContainer,
+ * or any other sandbox type. All commands are routed through the registry
+ * to the connected sandbox-client.
+ *
+ * Lifecycle: Allocate → Prepare → Register → Ready → Command
+ *                                                     ^^^^^^^
  */
 
-import { nanoid } from "nanoid";
-import type {
-  SandboxConfig,
-  Sandbox as ISandbox,
-  ShellResult,
-  ExecuteResult,
-  EvaluateResult,
-} from "./types.js";
-import { Isolator } from "./isolators/Isolator.js";
-import { NoneIsolator } from "./isolators/NoneIsolator.js";
-import { SrtIsolator } from "./isolators/SrtIsolator.js";
-import { CloudflareContainerIsolator } from "./isolators/CloudflareContainerIsolator.js";
-import { SandboxError } from "./errors.js";
+export interface ExecOptions {
+  cwd?: string;
+  timeout?: number;
+}
 
-export class BaseSandbox implements ISandbox {
-  public readonly id: string;
-  protected isolator: Isolator;
-  protected config: SandboxConfig;
+export interface ExecResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  success: boolean;
+}
 
-  constructor(config: SandboxConfig) {
-    this.id = `sandbox-${nanoid()}`;
-    this.config = config;
-    this.isolator = this.createIsolator(config);
-  }
+export interface ProcessInfo {
+  id: string;
+  pid?: number;
+  command: string;
+  status: string;
+}
 
-  private createIsolator(config: SandboxConfig): Isolator {
-    const { isolator: isolatorType, runtime } = config;
+export interface FileInfo {
+  name: string;
+  type: "file" | "directory" | "symlink";
+  size?: number;
+}
 
-    switch (isolatorType) {
-      case "none":
-        return new NoneIsolator(runtime);
-      case "srt":
-        return new SrtIsolator(runtime);
-      case "cloudflare":
-        return new CloudflareContainerIsolator(runtime);
-      case "e2b":
-        throw new SandboxError(`Isolator "e2b" not yet implemented`);
-      default:
-        throw new SandboxError(`Unknown isolator type: ${isolatorType}`);
-    }
-  }
-
-  /**
-   * Execute shell command
-   */
-  async shell(command: string): Promise<ShellResult> {
-    return this.isolator.shell(command, {
-      timeout: this.config.limits?.timeout,
-    });
-  }
-
-  /**
-   * Execute code (script mode)
-   */
-  async execute(code: string): Promise<ExecuteResult> {
-    return this.isolator.execute(code, {
-      timeout: this.config.limits?.timeout,
-    });
-  }
-
-  /**
-   * Evaluate expression (REPL mode)
-   */
-  async evaluate(expr: string): Promise<EvaluateResult> {
-    return this.isolator.evaluate(expr, {
-      timeout: this.config.limits?.timeout,
-    });
-  }
-
-  /**
-   * Upload file to sandbox
-   */
-  async upload(data: Buffer, remotePath: string): Promise<void> {
-    return this.isolator.upload(data, remotePath);
-  }
-
-  /**
-   * Download file from sandbox
-   */
-  async download(remotePath: string): Promise<Buffer> {
-    return this.isolator.download(remotePath);
-  }
-
-  /**
-   * Destroy sandbox and cleanup resources
-   */
-  async destroy(): Promise<void> {
-    return this.isolator.destroy();
-  }
+export interface Sandbox {
+  exec(command: string, options?: ExecOptions): Promise<ExecResult>;
+  startProcess(command: string, options?: { cwd?: string }): Promise<ProcessInfo>;
+  killProcess(processId: string): Promise<void>;
+  listProcesses(): Promise<ProcessInfo[]>;
+  readFile(path: string): Promise<string>;
+  writeFile(path: string, content: string): Promise<void>;
+  listFiles(path: string): Promise<FileInfo[]>;
+  mkdir(path: string, options?: { recursive?: boolean }): Promise<void>;
+  deleteFile(path: string): Promise<void>;
+  exposePort(port: number, hostname: string): Promise<{ url: string }>;
+  destroy(): Promise<void>;
 }
