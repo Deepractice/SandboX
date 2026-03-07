@@ -1,6 +1,6 @@
 {
   "name": "sandboxxjs",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Sandbox abstraction framework — unified lifecycle for cloud and browser sandboxes",
   "keywords": [
     "sandbox",
