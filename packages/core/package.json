@@ -1,6 +1,6 @@
 {
   "name": "@sandboxxjs/core",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Core interfaces and runtime for sandboxxjs — unified sandbox lifecycle",
   "type": "module",
   "main": "dist/index.js",
