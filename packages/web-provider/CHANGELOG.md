@@ -1,5 +1,12 @@
 # @sandboxxjs/web-provider
 
+## 2.2.1
+
+### Patch Changes
+
+- f5f384a: Fix bootstrap to read userId from URL params for correct Bridge DO routing
+  - @sandboxxjs/core@2.2.1
+
 ## 2.2.0
 
 ### Minor Changes
