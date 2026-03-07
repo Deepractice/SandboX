@@ -1,7 +1,7 @@
 {
-  "name": "@sandboxxjs/core",
+  "name": "@sandboxxjs/web-provider",
   "version": "1.0.0",
-  "description": "Core interfaces and runtime for sandboxxjs — unified sandbox lifecycle",
+  "description": "WebContainer provider for sandboxxjs — browser-based sandbox execution",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,16 +9,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./protocol": {
-      "types": "./dist/protocol.d.ts",
-      "import": "./dist/protocol.js"
     }
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sandboxxjs/core": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
