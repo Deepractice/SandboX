@@ -1,4 +1,5 @@
 import type {
+  SandboxBootstrap,
   SandboxExecutor,
   SandboxFileSystem,
   SandboxProcessManager,
@@ -13,11 +14,18 @@ export interface NodeProviderOptions {
   cwd?: string;
 }
 
+/** No-op bootstrap — cloud containers are already running. */
+const noopBootstrap: SandboxBootstrap = { boot: async () => {} };
+
 export class NodeProvider implements SandboxProvider {
   private options: NodeProviderOptions;
 
   constructor(options?: NodeProviderOptions) {
     this.options = options ?? {};
+  }
+
+  createBootstrap(): SandboxBootstrap {
+    return noopBootstrap;
   }
 
   createExecutor(): SandboxExecutor {

@@ -1,5 +1,5 @@
 import type { FileInfo, SandboxFileSystem } from "@sandboxxjs/core";
-import type { WebContainer } from "./types";
+import type { WebContainer } from "@webcontainer/api";
 
 export class WebContainerFileSystem implements SandboxFileSystem {
   constructor(private wc: WebContainer) {}
@@ -21,7 +21,11 @@ export class WebContainerFileSystem implements SandboxFileSystem {
   }
 
   async mkdir(path: string, options?: { recursive?: boolean }): Promise<void> {
-    await this.wc.fs.mkdir(path, { recursive: options?.recursive ?? true });
+    if (options?.recursive === false) {
+      await this.wc.fs.mkdir(path);
+    } else {
+      await this.wc.fs.mkdir(path, { recursive: true });
+    }
   }
 
   async deleteFile(path: string): Promise<void> {

@@ -17,27 +17,28 @@
     },
     "packages/core": {
       "name": "@sandboxxjs/core",
-      "version": "1.0.0",
+      "version": "2.0.0",
     },
     "packages/node-provider": {
       "name": "@sandboxxjs/node-provider",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "dependencies": {
         "@sandboxxjs/core": "workspace:*",
       },
     },
     "packages/sandboxxjs": {
       "name": "sandboxxjs",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "dependencies": {
         "@sandboxxjs/core": "workspace:*",
       },
     },
     "packages/web-provider": {
       "name": "@sandboxxjs/web-provider",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "dependencies": {
         "@sandboxxjs/core": "workspace:*",
+        "@webcontainer/api": "^1.6.1",
       },
     },
   },
@@ -155,6 +156,8 @@
     "@types/conventional-commits-parser": ["@types/conventional-commits-parser@5.0.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-BgT2szDXnVypgpNxOK8aL5SGjUdaQbC++WZNjF1Qge3Og2+zhHj+RWhmehLhYyvQwqAmvezruVfOf8+3m74W+g=="],
 
     "@types/node": ["@types/node@24.10.8", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-r0bBaXu5Swb05doFYO2kTWHMovJnNVbCsII0fhesM8bNRlLhXIuckley4a2DaD+vOdmm5G+zGkQZAPZsF80+YQ=="],
+
+    "@webcontainer/api": ["@webcontainer/api@1.6.1", "", {}, "sha512-2RS2KiIw32BY1Icf6M1DvqSmcon9XICZCDgS29QJb2NmF12ZY2V5Ia+949hMKB3Wno+P/Y8W+sPP59PZeXSELg=="],
 
     "JSONStream": ["JSONStream@1.3.5", "", { "dependencies": { "jsonparse": "^1.2.0", "through": ">=2.2.7 <3" }, "bin": { "JSONStream": "./bin.js" } }, "sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ=="],
 

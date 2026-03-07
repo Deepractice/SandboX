@@ -17,16 +17,25 @@ import type {
 import type { SandboxProvider } from "./provider";
 
 export function createSandboxClient(provider: SandboxProvider): SandboxClient {
-  const executor = provider.createExecutor();
-  const fs = provider.createFileSystem();
-  const pm = provider.createProcessManager();
+  const bootstrap = provider.createBootstrap();
 
+  let executor: ReturnType<SandboxProvider["createExecutor"]>;
+  let fs: ReturnType<SandboxProvider["createFileSystem"]>;
+  let pm: ReturnType<SandboxProvider["createProcessManager"]>;
   let ws: WebSocket | null = null;
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   let isConnected = false;
 
   async function connect(options: SandboxClientOptions): Promise<void> {
     const { wsUrl, sandboxId, token, heartbeatInterval = 30_000 } = options;
+
+    // Step 2: Prepare — boot the sandbox environment
+    await bootstrap.boot();
+
+    // Create components after bootstrap (environment is now ready)
+    executor = provider.createExecutor();
+    fs = provider.createFileSystem();
+    pm = provider.createProcessManager();
 
     return new Promise((resolve, reject) => {
       ws = new WebSocket(wsUrl);

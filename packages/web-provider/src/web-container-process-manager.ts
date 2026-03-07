@@ -1,5 +1,5 @@
 import type { ProcessInfo, SandboxProcessManager } from "@sandboxxjs/core";
-import type { WebContainer, WebContainerProcess } from "./types";
+import type { WebContainer, WebContainerProcess } from "@webcontainer/api";
 
 export class WebContainerProcessManager implements SandboxProcessManager {
   private processes = new Map<

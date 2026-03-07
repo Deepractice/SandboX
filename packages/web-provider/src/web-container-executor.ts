@@ -1,5 +1,5 @@
 import type { ExecOptions, ExecResult, SandboxExecutor } from "@sandboxxjs/core";
-import type { WebContainer } from "./types";
+import type { WebContainer } from "@webcontainer/api";
 
 export class WebContainerExecutor implements SandboxExecutor {
   constructor(private wc: WebContainer) {}

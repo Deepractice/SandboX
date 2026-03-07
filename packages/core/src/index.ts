@@ -31,6 +31,7 @@ export type { SandboxClient, SandboxClientOptions } from "./client";
 export { createSandboxClient } from "./create-client";
 // Provider — Platform capability injection
 export type {
+  SandboxBootstrap,
   SandboxExecutor,
   SandboxFileSystem,
   SandboxProcessManager,

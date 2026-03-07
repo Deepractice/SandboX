@@ -2,16 +2,27 @@
  * SandboxProvider — platform capability injection.
  *
  * Provider is a component factory that supplies platform-specific
- * implementations of Executor, FileSystem, and ProcessManager.
+ * implementations of Bootstrap, Executor, FileSystem, and ProcessManager.
  *
  * The core layer (createSandboxClient) only depends on this interface.
  * Platform differences are isolated in provider implementations:
- *   - node-provider: child_process + node:fs
- *   - web-provider: @webcontainer/api
+ *   - node-provider: child_process + node:fs (bootstrap is no-op)
+ *   - web-provider: @webcontainer/api (bootstrap boots WebContainer)
  *   - Future: Docker, SSH, etc.
  */
 
 import type { ExecOptions, ExecResult, FileInfo, ProcessInfo } from "./sandbox";
+
+/**
+ * Bootstrap component — Step 2: Prepare.
+ *
+ * Initializes the sandbox environment before other components can work.
+ * For cloud containers this is a no-op (container is already running).
+ * For WebContainer this boots the runtime in the browser.
+ */
+export interface SandboxBootstrap {
+  boot(): Promise<void>;
+}
 
 /**
  * Command execution component.
@@ -44,10 +55,11 @@ export interface SandboxProcessManager {
  * SandboxProvider — the component factory.
  *
  * Each platform implements this interface to provide its components.
- * createSandboxClient(provider) obtains components and dispatches
- * incoming messages to the appropriate component.
+ * createSandboxClient(provider) calls bootstrap.boot() first,
+ * then obtains other components and dispatches incoming messages.
  */
 export interface SandboxProvider {
+  createBootstrap(): SandboxBootstrap;
   createExecutor(): SandboxExecutor;
   createFileSystem(): SandboxFileSystem;
   createProcessManager(): SandboxProcessManager;

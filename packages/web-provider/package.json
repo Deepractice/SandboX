@@ -17,7 +17,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sandboxxjs/core": "workspace:*"
+    "@sandboxxjs/core": "workspace:*",
+    "@webcontainer/api": "^1.6.1"
   },
   "publishConfig": {
     "access": "public"
