@@ -1,5 +1,11 @@
 # @sandboxxjs/node-provider
 
+## 2.0.1
+
+### Patch Changes
+
+- @sandboxxjs/core@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

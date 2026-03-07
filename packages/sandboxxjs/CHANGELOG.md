@@ -1,5 +1,12 @@
 # sandboxxjs
 
+## 2.0.1
+
+### Patch Changes
+
+- ce352d9: Add `sandboxxjs/protocol` subpath export for WebSocket message types.
+  - @sandboxxjs/core@2.0.1
+
 ## 2.0.0
 
 ### Major Changes
