@@ -9,16 +9,20 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./bootstrap": "./dist/bootstrap.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node build-bootstrap.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@sandboxxjs/core": "workspace:*",
     "@webcontainer/api": "^1.6.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
   },
   "publishConfig": {
     "access": "public"
