@@ -1,5 +1,17 @@
 # @sandboxxjs/core
 
+## 2.1.0
+
+### Minor Changes
+
+- 5c1c1a9: Add SandboxBootstrap component to Provider — Step 2: Prepare.
+
+  - SandboxProvider now requires createBootstrap() method
+  - web-provider: bootstrap boots WebContainer internally, no need to import @webcontainer/api
+  - node-provider: bootstrap is no-op (container already running)
+  - createSandboxClient calls bootstrap.boot() before creating other components
+  - Removed custom WebContainer type definitions, using @webcontainer/api directly
+
 ## 2.0.1
 
 ## 2.0.0
