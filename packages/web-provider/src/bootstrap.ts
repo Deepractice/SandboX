@@ -5,7 +5,7 @@
  * It auto-reads connection params from the URL, boots WebContainer,
  * and connects sandbox-client to the Bridge DO.
  *
- * URL format: /webcontainer/:sandboxId?token=xxx
+ * URL format: /webcontainer/:sandboxId?token=xxx&userId=xxx
  * The wsUrl is derived from the page's own origin.
  */
 
@@ -17,14 +17,15 @@ async function main() {
   const pathParts = url.pathname.split("/").filter(Boolean);
   const sandboxId = pathParts[pathParts.length - 1];
   const token = url.searchParams.get("token");
+  const userId = url.searchParams.get("userId");
 
-  if (!sandboxId || !token) {
-    console.error("[webcontainer] Missing sandboxId or token in URL");
+  if (!sandboxId || !token || !userId) {
+    console.error("[webcontainer] Missing sandboxId, token, or userId in URL");
     return;
   }
 
   const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${wsProtocol}//${url.host}/ws?sandboxId=${sandboxId}&token=${token}&userId=bootstrap`;
+  const wsUrl = `${wsProtocol}//${url.host}/ws?sandboxId=${sandboxId}&token=${token}&userId=${userId}`;
 
   console.log(`[webcontainer] Booting sandbox ${sandboxId}...`);
 
