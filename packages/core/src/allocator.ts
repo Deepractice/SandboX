@@ -26,6 +26,8 @@ export interface SandboxContainer {
     wsUrl: string;
     token: string;
   };
+  /** Platform-specific extension data */
+  metadata?: Record<string, unknown>;
 }
 
 export interface AllocateRequest {
