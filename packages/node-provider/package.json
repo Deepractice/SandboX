@@ -1,6 +1,6 @@
 {
   "name": "@sandboxxjs/node-provider",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Node.js provider for sandboxxjs — child_process + node:fs",
   "type": "module",
   "main": "dist/index.js",
