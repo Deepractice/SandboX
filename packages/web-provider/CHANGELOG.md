@@ -1,5 +1,15 @@
 # @sandboxxjs/web-provider
 
+## 2.2.0
+
+### Minor Changes
+
+- 3c468c2: Add bootstrap bundle for iframe-based WebContainer boot (`./bootstrap` subpath)
+
+### Patch Changes
+
+- @sandboxxjs/core@2.2.0
+
 ## 2.1.1
 
 ### Patch Changes

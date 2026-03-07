@@ -1,6 +1,6 @@
 {
   "name": "@sandboxxjs/web-provider",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "WebContainer provider for sandboxxjs — browser-based sandbox execution",
   "type": "module",
   "main": "dist/index.js",
