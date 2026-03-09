@@ -10,7 +10,10 @@
  *   await sandbox.exec("bun test")
  *
  *   // Client — connect to remote Worker or Broker
- *   const sandbox = await createSandbox(node()).connect("wss://...")
+ *   const client = await createSandbox(node()).connect("wss://...")
+ *
+ *   // Client — pure client mode, no platform needed (browser / Node.js 22+)
+ *   const client = await createSandbox().connect("wss://...", { sandboxId: "xxx" })
  *
  *   // Worker — serve for direct connections
  *   const worker = await createSandbox(node()).serve({ port: 3100 })
@@ -32,6 +35,7 @@ import type {
   Worker,
 } from "@sandboxxjs/core";
 import type { Platform } from "@sandboxxjs/core/platform";
+import { connect } from "./client.js";
 
 // Re-export all core types
 export type {
@@ -52,6 +56,9 @@ export type {
 // Re-export Platform SPI types
 export type { Platform, WorkerBuilder } from "@sandboxxjs/core/platform";
 
+// Re-export connect for direct usage
+export { connect } from "./client.js";
+
 export interface SandboxBuilder extends Sandbox {
   /** Connect to a remote Worker or Broker as a Client */
   connect(serverUrl: string, options?: { token?: string; sandboxId?: string }): Promise<Client>;
@@ -66,40 +73,50 @@ export interface SandboxBuilder extends Sandbox {
   broker(config: BrokerConfig): Promise<Broker>;
 }
 
+function noPlatform(method: string): never {
+  throw new Error(
+    `${method}() requires a platform. Use createSandbox(node()) or createSandbox(cloudflare()).`
+  );
+}
+
 /**
  * createSandbox — the single entry point for all SandboX operations.
  *
- * Returns a SandboxBuilder that can be used directly (local execution)
- * or chained with .connect(), .serve(), .run(), .broker() for network modes.
+ * With platform: full functionality (local exec, connect, serve, run, broker).
+ * Without platform: client-only mode (connect only, works in browser).
  */
-export function createSandbox(platform: Platform): SandboxBuilder {
-  const local = platform.createLocal();
+export function createSandbox(platform?: Platform): SandboxBuilder {
+  const local = platform?.createLocal();
 
   return {
-    // Local Sandbox operations — delegate to platform's local implementation
-    exec: (command, options) => local.exec(command, options),
-    startProcess: (command, options) => local.startProcess(command, options),
-    killProcess: (processId) => local.killProcess(processId),
-    listProcesses: () => local.listProcesses(),
-    readFile: (path) => local.readFile(path),
-    writeFile: (path, content) => local.writeFile(path, content),
-    listFiles: (path) => local.listFiles(path),
-    mkdir: (path, options) => local.mkdir(path, options),
-    deleteFile: (path) => local.deleteFile(path),
-    destroy: () => local.destroy(),
+    // Local Sandbox operations
+    exec: (command, options) => (local ? local.exec(command, options) : noPlatform("exec")),
+    startProcess: (command, options) =>
+      local ? local.startProcess(command, options) : noPlatform("startProcess"),
+    killProcess: (processId) => (local ? local.killProcess(processId) : noPlatform("killProcess")),
+    listProcesses: () => (local ? local.listProcesses() : noPlatform("listProcesses")),
+    readFile: (path) => (local ? local.readFile(path) : noPlatform("readFile")),
+    writeFile: (path, content) =>
+      local ? local.writeFile(path, content) : noPlatform("writeFile"),
+    listFiles: (path) => (local ? local.listFiles(path) : noPlatform("listFiles")),
+    mkdir: (path, options) => (local ? local.mkdir(path, options) : noPlatform("mkdir")),
+    deleteFile: (path) => (local ? local.deleteFile(path) : noPlatform("deleteFile")),
+    destroy: () => (local ? local.destroy() : noPlatform("destroy")),
 
     // Network modes
     connect: (serverUrl, options) =>
-      platform.createClient({
-        serverUrl,
-        token: options?.token,
-        sandboxId: options?.sandboxId,
-      }),
+      platform
+        ? platform.createClient({
+            serverUrl,
+            token: options?.token,
+            sandboxId: options?.sandboxId,
+          })
+        : connect(serverUrl, options),
 
-    serve: (config) => platform.createWorker().serve(config),
+    serve: (config) => (platform ? platform.createWorker().serve(config) : noPlatform("serve")),
 
-    run: (config) => platform.createWorker().run(config),
+    run: (config) => (platform ? platform.createWorker().run(config) : noPlatform("run")),
 
-    broker: (config) => platform.createBroker(config),
+    broker: (config) => (platform ? platform.createBroker(config) : noPlatform("broker")),
   };
 }
