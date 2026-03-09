@@ -1,5 +1,19 @@
 # @sandboxxjs/node-platform
 
+## 2.4.0
+
+### Minor Changes
+
+- 53a2387: Built-in Client: platform-optional createSandbox() with universal WebSocket client
+  - `createSandbox()` now works without a platform — client-only mode for browser/Node.js 22+
+  - Built-in `connect()` function using standard WebSocket API (zero dependencies)
+  - `export { connect } from "sandboxxjs"` for direct usage
+
+### Patch Changes
+
+- Updated dependencies [53a2387]
+  - @sandboxxjs/core@2.4.0
+
 ## 2.3.0
 
 ### Minor Changes
