@@ -1,46 +1,24 @@
 /**
- * @sandboxxjs/core — Sandbox abstraction framework.
+ * @sandboxxjs/core — interfaces and protocol for the SandboX framework.
  *
- * Unified lifecycle for any sandbox environment:
+ * Three roles:
+ *   Client — issues commands (connect)
+ *   Broker — intermediary (registry + router + discovery + proxy)
+ *   Worker — executes commands (serve or run)
  *
- *   Allocate → Prepare → Register → Ready → Command
- *
- *   1. Allocator provisions resources, returns SandboxContainer (status: pending)
- *   2. Sandbox environment starts, sandbox-client prepares
- *   3. sandbox-client connects to Registry via WebSocket, registers
- *   4. Registry marks sandbox as ready
- *   5. Router dispatches commands through Registry to sandbox-client
- *
- * Platform differences are injected via SandboxProvider:
- *   - @sandboxxjs/node-provider: child_process + node:fs
- *   - @sandboxxjs/web-provider: @webcontainer/api
- *   - Future: Docker, SSH, WASM, etc.
+ * All roles share the Sandbox interface and JSON-RPC 2.0 protocol.
+ * Platform implementations provide the concrete behavior.
  */
 
-// Allocator — Step 1: Allocate
-export type {
-  AllocateRequest,
-  SandboxAllocator,
-  SandboxContainer,
-  SandboxContainerType,
-  SandboxStatus,
-} from "./allocator";
+// Broker — intermediary between Client and Worker
+export type { Broker, BrokerConfig, WorkerInfo } from "./broker";
 
-// Client — Step 2-3: Prepare + Register
-export type { SandboxClient, SandboxClientOptions } from "./client";
-export { createSandboxClient } from "./create-client";
-// Provider — Platform capability injection
-export type {
-  SandboxBootstrap,
-  SandboxExecutor,
-  SandboxFileSystem,
-  SandboxProcessManager,
-  SandboxProvider,
-} from "./provider";
-// Registry — Step 3-4: Register + Ready
-export type { SandboxConnection, SandboxRegistry } from "./registry";
-// Router — Step 5: Command (RPC dispatch)
-export type { SandboxRouter } from "./router";
-
-// Sandbox — Step 5: Command (consumer-facing)
+// Client — command issuer
+export type { Client, ClientConfig } from "./client";
+// Sandbox — the shared operation interface
 export type { ExecOptions, ExecResult, FileInfo, ProcessInfo, Sandbox } from "./sandbox";
+// Worker — command executor
+export type { RunConfig, ServeConfig, Worker } from "./worker";
+
+// Platform SPI — re-exported from @sandboxxjs/core/platform
+// Platform implementors should import from "@sandboxxjs/core/platform"

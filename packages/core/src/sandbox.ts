@@ -1,15 +1,8 @@
 /**
  * Sandbox — the unified interface for sandbox operations.
  *
- * Step 5 of the lifecycle: Command.
- *
- * Consumers get a Sandbox instance and operate on it.
- * They never need to know if it's a cloud container, a browser WebContainer,
- * or any other sandbox type. All commands are routed through the registry
- * to the connected sandbox-client.
- *
- * Lifecycle: Allocate → Prepare → Register → Ready → Command
- *                                                     ^^^^^^^
+ * This is the ONE interface that all roles share.
+ * Whether you're a Client, Worker, or Broker — you produce or consume Sandbox.
  */
 
 export interface ExecOptions {
@@ -47,6 +40,5 @@ export interface Sandbox {
   listFiles(path: string): Promise<FileInfo[]>;
   mkdir(path: string, options?: { recursive?: boolean }): Promise<void>;
   deleteFile(path: string): Promise<void>;
-  exposePort(port: number, hostname: string): Promise<{ url: string }>;
   destroy(): Promise<void>;
 }

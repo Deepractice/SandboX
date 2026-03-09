@@ -1,22 +1,27 @@
 /**
- * Re-export protocol types from @sandboxxjs/core.
+ * Re-export protocol types and values from @sandboxxjs/core.
  */
+
 export type {
-  ClientMessage,
-  ErrorMessage,
-  ExecMessage,
-  FsDeleteMessage,
-  FsListMessage,
-  FsMkdirMessage,
-  FsReadMessage,
-  FsResultMessage,
-  FsWriteMessage,
-  HeartbeatMessage,
-  ProcessKillMessage,
-  ProcessListMessage,
-  ProcessStartMessage,
-  RegisteredMessage,
-  RegisterMessage,
-  ResultMessage,
-  ServiceMessage,
+  ExecRunParams,
+  ExecRunResult,
+  FsDeleteParams,
+  FsListParams,
+  FsListResult,
+  FsMkdirParams,
+  FsReadParams,
+  FsReadResult,
+  FsWriteParams,
+  JsonRpcError,
+  JsonRpcNotification,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  ProcessKillParams,
+  ProcessListResult,
+  ProcessStartParams,
+  ProcessStartResult,
+  RegisterParams,
+  RegisterResult,
+  SandboxMethod,
 } from "@sandboxxjs/core/protocol";
+export { ErrorCodes } from "@sandboxxjs/core/protocol";
