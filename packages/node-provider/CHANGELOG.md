@@ -1,5 +1,12 @@
 # @sandboxxjs/node-provider
 
+## 2.2.2
+
+### Patch Changes
+
+- Updated dependencies [fdc312f]
+  - @sandboxxjs/core@2.3.0
+
 ## 2.2.1
 
 ### Patch Changes
@@ -24,7 +31,6 @@
 ### Minor Changes
 
 - 5c1c1a9: Add SandboxBootstrap component to Provider — Step 2: Prepare.
-
   - SandboxProvider now requires createBootstrap() method
   - web-provider: bootstrap boots WebContainer internally, no need to import @webcontainer/api
   - node-provider: bootstrap is no-op (container already running)
@@ -49,7 +55,6 @@
 - 9c7ae4c: Complete architecture rewrite: Provider-based unified sandbox lifecycle.
 
   Breaking changes:
-
   - Removed old Isolator + Mixin + State architecture
   - Removed @sandboxxjs/state, @sandboxxjs/cli, @sandboxxjs/cloudflare-isolator packages
   - New unified lifecycle: Allocate → Prepare → Register → Ready → Command
