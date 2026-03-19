@@ -17,6 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@deepracticex/rpc": "^1.0.0",
     "@sandboxxjs/core": "workspace:*",
     "ws": "^8.18.0"
   },

@@ -5,8 +5,13 @@
  * Methods map 1:1 to the Sandbox interface.
  */
 
+import {
+  ErrorCodes as BaseErrorCodes,
+  type RpcProtocol,
+} from "@deepracticex/rpc";
+
 // ============================================================
-// JSON-RPC 2.0 base types
+// JSON-RPC 2.0 base types (re-export with SandboX-specific shapes)
 // ============================================================
 
 export interface JsonRpcRequest {
@@ -141,16 +146,34 @@ export interface RegisterResult {
 }
 
 // ============================================================
-// Error codes
+// Error codes — standard + sandbox-specific
 // ============================================================
 
 export const ErrorCodes = {
-  PARSE_ERROR: -32700,
-  INVALID_REQUEST: -32600,
-  METHOD_NOT_FOUND: -32601,
-  INVALID_PARAMS: -32602,
-  INTERNAL_ERROR: -32603,
+  ...BaseErrorCodes,
+  // Sandbox-specific
   WORKER_NOT_FOUND: -33001,
   WORKER_DISCONNECTED: -33002,
   EXECUTION_TIMEOUT: -33003,
 } as const;
+
+// ============================================================
+// RPC Protocol export
+// ============================================================
+
+export const protocol: RpcProtocol = {
+  namespace: "sandbox",
+  version: "2.4.0",
+  methods: [
+    { name: "exec.run", description: "Execute a command and return stdout/stderr" },
+    { name: "process.start", description: "Start a background process" },
+    { name: "process.kill", description: "Kill a running process" },
+    { name: "process.list", description: "List all running processes" },
+    { name: "fs.read", description: "Read file content" },
+    { name: "fs.write", description: "Write content to file" },
+    { name: "fs.list", description: "List directory contents" },
+    { name: "fs.mkdir", description: "Create directory" },
+    { name: "fs.delete", description: "Delete file/directory" },
+    { name: "sandbox.destroy", description: "Destroy the sandbox instance" },
+  ],
+};

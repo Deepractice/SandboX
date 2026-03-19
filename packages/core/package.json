@@ -19,6 +19,9 @@
       "import": "./dist/platform.js"
     }
   },
+  "dependencies": {
+    "@deepracticex/rpc": "^1.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",

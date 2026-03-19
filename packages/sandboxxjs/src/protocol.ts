@@ -24,4 +24,4 @@ export type {
   RegisterResult,
   SandboxMethod,
 } from "@sandboxxjs/core/protocol";
-export { ErrorCodes } from "@sandboxxjs/core/protocol";
+export { ErrorCodes, protocol } from "@sandboxxjs/core/protocol";
