@@ -3,20 +3,20 @@
   "version": "2.4.0",
   "description": "Core interfaces and runtime for sandboxxjs — unified sandbox lifecycle",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/index.ts",
+  "types": "dist/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./protocol": {
-      "types": "./dist/protocol.d.ts",
-      "import": "./dist/protocol.js"
+      "types": "./src/protocol.ts",
+      "import": "./src/protocol.ts"
     },
     "./platform": {
-      "types": "./dist/platform.d.ts",
-      "import": "./dist/platform.js"
+      "types": "./src/platform.ts",
+      "import": "./src/platform.ts"
     }
   },
   "dependencies": {
@@ -28,6 +28,22 @@
     "clean": "rm -rf dist"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./protocol": {
+        "types": "./dist/protocol.d.ts",
+        "import": "./dist/protocol.js"
+      },
+      "./platform": {
+        "types": "./dist/platform.d.ts",
+        "import": "./dist/platform.js"
+      }
+    }
   }
 }
