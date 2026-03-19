@@ -35,7 +35,7 @@ import type {
   Worker,
 } from "@sandboxxjs/core";
 import type { Platform } from "@sandboxxjs/core/platform";
-import { connect } from "./client.js";
+import { connect } from "./client";
 
 // Re-export all core types
 export type {
@@ -57,7 +57,7 @@ export type {
 export type { Platform, WorkerBuilder } from "@sandboxxjs/core/platform";
 
 // Re-export connect for direct usage
-export { connect } from "./client.js";
+export { connect } from "./client";
 
 export interface SandboxBuilder extends Sandbox {
   /** Connect to a remote Worker or Broker as a Client */
