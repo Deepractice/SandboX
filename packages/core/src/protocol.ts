@@ -162,7 +162,7 @@ export const ErrorCodes = {
 // ============================================================
 
 export const protocol: RpcProtocol = {
-  namespace: "sandbox",
+  namespace: "sandbox",  // service name = sandbox
   version: "2.4.0",
   methods: [
     { name: "exec.run", description: "Execute a command and return stdout/stderr" },
